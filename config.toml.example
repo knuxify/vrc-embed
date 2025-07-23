@@ -1,0 +1,39 @@
+## vrc-embed configuration
+
+## A VRChat account is needed to access the user API.
+[vrchat]
+# Username or e-mail for VRChat account
+username="YourVRCAccountHere"
+# Password for VRChat account
+password="correct horse battery staple"
+
+# VRChat requires either e-mail or 2FA verification on nearly every login.
+# Typing the codes in manually is possible, but highly impractical for headless
+# hosts.
+#
+# For this reason, vrc-embed implements TOTP authentication. To use it:
+# * Log into the VRChat web UI (hit the Login button at https://vrchat.com)
+# * Navigate to the profile settings (https://vrchat.com/home/profile)
+# * Scroll down to "Two-factor authentication" and hit Enable
+# * It will show you a QR code and a link to show a code to type in manually.
+#   Click the link to see the code, then uncomment the below variable and
+#   paste it in.
+# * Get an authenticator app and scan the QR code, so that you have manual
+#   access to the account.
+# * Finish the 2FA setup process. If everything went correctly, it should say
+#   "You are protecting your account with an additional login step".
+#
+# If your account already has 2FA and you already have it added to your
+# authenticator app, export the 2FA settings from the auth app and find the
+# TOTP secret. Paste this secret into the variable.
+# Unlike the string provided by VRChat, it will be uppercase and contain no
+# spaces (it is, in fact, the same value, just formatted differently).
+# vrc-embed accepts both secret styles.
+
+# totp="abcd abcd abcd abcd abcd abcd abcd abcd"
+
+## Redis is used for caching user data, as well as the login cookies.
+[redis]
+host="127.0.0.1"
+port=6379
+# password="foobared"
