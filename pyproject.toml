@@ -15,7 +15,8 @@ dependencies = [
     "redis",
     "pillow",
     "timeago",
-    "pyotp"
+    "pyotp",
+    "toml; python_version < '3.11'"
 ]
 
 
