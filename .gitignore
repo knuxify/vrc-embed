@@ -16,3 +16,5 @@ build/
 
 fonts/*.ttf
 fonts/*.otf
+
+*.kate-swp
