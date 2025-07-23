@@ -1,7 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""
-Fetching data from VRChat and caching.
-"""
+"""Fetching data from VRChat and caching."""
 
 import json
 import redis
@@ -60,13 +58,13 @@ r_bin = redis.Redis(
     decode_responses=False,
 )
 
+
 def api_make_cookie(name: str, value: str) -> Cookie:
     """Create a Cookie object for the cookie with the given name and value."""
     return Cookie(
         version=0,
         name=name,
         value=value,
-
     )
 
 
@@ -128,7 +126,9 @@ def api_log_in() -> bool:
     # Save login cookie for subsequent runs.
     cookie_jar = vrc_api.rest_client.cookie_jar._cookies["api.vrchat.cloud"]["/"]
     r_bin.set("vrcembed:cookies:auth", pickle.dumps(cookie_jar["auth"]))
-    r_bin.set("vrcembed:cookies:twofactorauth", pickle.dumps(cookie_jar["twoFactorAuth"]))
+    r_bin.set(
+        "vrcembed:cookies:twofactorauth", pickle.dumps(cookie_jar["twoFactorAuth"])
+    )
 
     return True
 
@@ -154,7 +154,6 @@ def get_vrc_user(user_id: str) -> dict | None:
         user_cached = 0
 
     if not user_cached or (int(time.time()) - user_cached) > CACHE_TIMEOUT:
-
         try:
             user_api = users_api.UsersApi(vrc_api)
         except vrchatapi.exceptions.UnauthorizedException:
