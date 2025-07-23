@@ -13,7 +13,7 @@ vrc-embed solves this in a simple way: by generating an embeddable image on the 
 * You will need a VRChat account to use for API queries (querying user data is not possible without authentication). You can use your own account for this (you will not show up as online while vrc-embed is running), but if your instance sees a lot of use, it may be safer to create a separate account.
 ** Setting up 2FA is highly recommended, as VRChat often asks for a code during authentication, and vrc-embed can generate these codes automatically when a TOTP secret is configured. See the comment in `config.toml.example` for a guide - notably, **you will need to save the TOTP secret to put in the config**.
 
-## Native
+### Native
 
 * Install Python and Redis.
 * Enable/start the Redis service.
@@ -25,7 +25,7 @@ vrc-embed solves this in a simple way: by generating an embeddable image on the 
 
 **Note:** For development, you can use `poetry`. Run `poetry install` to fetch dependencies, then run with `poetry run ./run-dev.sh`.
 
-## Docker
+### Docker
 
 * Install Docker.
 * Copy `docker/config.toml.example` to `config.toml`. Adjust as needed.
