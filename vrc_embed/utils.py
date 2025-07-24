@@ -1,12 +1,17 @@
 # SPDX-License-Identifier: MIT
-"""
-Miscelaneous functions.
-"""
+"""Miscelaneous functions."""
 
-from PIL import ImageFont
 import os.path
 
+from PIL import ImageFont
+
 from . import config
+
+
+def get_base_path():
+    """Get the vrc-embed base repo clone path."""
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 #: Loaded font cache for text_width().
 _font_cache = {}
@@ -16,7 +21,7 @@ FONTS = {"Noto Sans": "notosans.ttf"}
 
 FONTS_DIR = config.get("fonts", {}).get(
     "path",
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "fonts"),
+    os.path.join(get_base_path(), "fonts"),
 )
 
 

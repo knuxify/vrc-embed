@@ -1,6 +1,9 @@
-quart
-vrchatapi
-redis
+aiohttp
+aiofiles
 pillow
-timeago
 pyotp
+quart
+redis
+timeago
+vrchatapi
+wand

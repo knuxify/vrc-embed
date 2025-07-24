@@ -10,15 +10,17 @@ vrc-embed solves this in a simple way: by generating an embeddable image on the 
 
 ## Setup
 
-* You will need a VRChat account to use for API queries (querying user data is not possible without authentication). You can use your own account for this (you will not show up as online while vrc-embed is running), but if your instance sees a lot of use, it may be safer to create a separate account.
-** Setting up 2FA is highly recommended, as VRChat often asks for a code during authentication, and vrc-embed can generate these codes automatically when a TOTP secret is configured. See the comment in `config.toml.example` for a guide - notably, **you will need to save the TOTP secret to put in the config**.
+You will need a VRChat account to use for API queries (querying user data is not possible without authentication). You can use your own account for this (you will not show up as online while vrc-embed is running), but if your instance sees a lot of use, it may be safer to create a separate account.
+
+Setting up 2FA is highly recommended, as VRChat often asks for a code during authentication, and vrc-embed can generate these codes automatically when a TOTP secret is configured. See the comment in `config.toml.example` for a guide - notably, **you will need to save the TOTP secret to put in the config**.
 
 ### Native
 
-* Install Python and Redis.
+* Install Python, Redis, ImageMagick and rsvg-convert (might be part of librsvg package).
 * Enable/start the Redis service.
 * Create a new virtualenv with `python3 -m venv venv; activate with `. venv/bin/activate`.
 * Install dependencies: `python3 -m pip install -r requirements.txt`
+  * For Python 3.10 and lower, install `toml` and `taskgroup`.
 * Copy `config.toml.example` to `config.toml`. Adjust as needed.
 * Download a copy of the Noto Sans Regular font and place it in `fonts/notosans.ttf`.
 * Run with `./run-prod.sh`.

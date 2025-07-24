@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MIT
+"""vrc-embed - Generate SVG/PNG preview of your VRChat profile for embedding on websites."""
 
 try:
     import tomllib

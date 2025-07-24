@@ -18,3 +18,5 @@ fonts/*.ttf
 fonts/*.otf
 
 *.kate-swp
+
+renders/*.png

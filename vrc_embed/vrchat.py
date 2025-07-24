@@ -2,12 +2,14 @@
 """Fetching data from VRChat and caching."""
 
 import json
-import redis
-import pyotp
-import vrchatapi
-import time
 import pickle
+import time
 from http.cookiejar import Cookie
+from typing import Tuple, Union
+
+import pyotp
+import redis
+import vrchatapi
 from vrchatapi.api import authentication_api, users_api
 from vrchatapi.exceptions import UnauthorizedException
 from vrchatapi.models.two_factor_auth_code import TwoFactorAuthCode
@@ -138,13 +140,15 @@ def serialize_user(user: vrchatapi.models.user.User) -> dict:
     return dict((k, (getattr(user, k) or "")) for k in USER_CACHED_PROPERTIES)
 
 
-def get_vrc_user(user_id: str) -> dict | None:
+def get_vrc_user(user_id: str) -> Tuple[Union[dict, None], bool]:
     """
     Fetch information about a VRChat user by their user ID.
 
     If the information is present in the cache, query it instead.
 
-    :returns: Dictionary with user data if the user was found, None otherwise.
+    :returns: Tuple with two items:
+      - Dictionary with user data if the user was found, None otherwise.
+      - Boolean representing cache hit; True if response was cached, False otherwise.
     """
     cache_key = f"vrcembed:users:{user_id}"
 
@@ -154,12 +158,12 @@ def get_vrc_user(user_id: str) -> dict | None:
         user_cached = 0
 
     if not user_cached or (int(time.time()) - user_cached) > CACHE_TIMEOUT:
+        user_api = users_api.UsersApi(vrc_api)
+
         try:
-            user_api = users_api.UsersApi(vrc_api)
+            _user = user_api.get_user(user_id)
         except vrchatapi.exceptions.UnauthorizedException:
             api_log_in()
-            user_api = users_api.UsersApi(vrc_api)
-        try:
             _user = user_api.get_user(user_id)
         except vrchatapi.exceptions.NotFoundException:
             user = None
@@ -172,4 +176,4 @@ def get_vrc_user(user_id: str) -> dict | None:
     else:
         user = json.loads(r.get(cache_key)) or None
 
-    return user
+    return (user, not not user_cached)

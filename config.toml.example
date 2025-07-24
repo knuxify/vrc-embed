@@ -1,5 +1,14 @@
 ## vrc-embed configuration
 
+[general]
+
+# Contact email for abuse reports. This is listed on the index page.
+contact="you@example.com"
+
+# Custom render cache folder; needs to be writable by the vrc-embed process.
+# By default, saves to the "renders" folder in the repo clone directory.
+# renders_path="/path/to/renders"
+
 ## A VRChat account is needed to access the user API.
 [vrchat]
 # Username or e-mail for VRChat account
