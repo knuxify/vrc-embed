@@ -1,8 +1,10 @@
 aiohttp
 aiofiles
+filetype
 pillow
 pyotp
 quart
+quart-tasks
 redis
 timeago
 vrchatapi

@@ -12,9 +12,11 @@ requires-python = ">=3.9"
 dependencies = [
     "aiofiles",
     "aiohttp",
+    "filetype",
     "pillow",
     "pyotp",
     "quart",
+    "quart-tasks",
     "redis",
     "taskgroup; python_version < '3.11'",
     "timeago",

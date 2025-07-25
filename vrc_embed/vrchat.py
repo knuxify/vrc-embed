@@ -1,14 +1,11 @@
 # SPDX-License-Identifier: MIT
 """Fetching data from VRChat and caching."""
 
-import json
 import pickle
-import time
 from http.cookiejar import Cookie
 from typing import Tuple, Union
 
 import pyotp
-import redis
 import vrchatapi
 from vrchatapi.api import authentication_api, users_api
 from vrchatapi.exceptions import UnauthorizedException
@@ -16,6 +13,7 @@ from vrchatapi.models.two_factor_auth_code import TwoFactorAuthCode
 from vrchatapi.models.two_factor_email_code import TwoFactorEmailCode
 
 from . import config
+from .cache import cache
 
 VRC_CONFIG = vrchatapi.Configuration(
     username=config["vrchat"]["username"], password=config["vrchat"]["password"]
@@ -27,7 +25,7 @@ vrc_api.user_agent = "vrc-embed/0.0.1 (https://github.com/knuxify/vrc-embed)"
 LOGGED_IN = False
 
 #: Cache timeout, in seconds.
-CACHE_TIMEOUT: int = 60
+CACHE_TIMEOUT: int = config["general"].get("vrc_cache_timeout", 60)
 
 #: Properties to include in the cache for VRChat users. All properties used in
 #: the templates should be included in this list.
@@ -42,22 +40,6 @@ USER_CACHED_PROPERTIES = (
     "state",
     "status",
     "status_description",
-)
-
-#: Redis configuration.
-r = redis.Redis(
-    host=config["redis"]["host"],
-    port=config["redis"]["port"],
-    password=config["redis"].get("password", None),
-    decode_responses=True,
-)
-
-#: Redis configuration without decoded responses.
-r_bin = redis.Redis(
-    host=config["redis"]["host"],
-    port=config["redis"]["port"],
-    password=config["redis"].get("password", None),
-    decode_responses=False,
 )
 
 
@@ -78,8 +60,8 @@ def api_log_in() -> bool:
     """
     auth_api = authentication_api.AuthenticationApi(vrc_api)
 
-    auth_cookie_cached = r_bin.get("vrcembed:cookies:auth")
-    twofactorauth_cookie_cached = r_bin.get("vrcembed:cookies:twofactorauth")
+    auth_cookie_cached = cache.get_bin("vrcembed:cookies:auth")
+    twofactorauth_cookie_cached = cache.get_bin("vrcembed:cookies:twofactorauth")
     if auth_cookie_cached:
         try:
             auth_cookie = pickle.loads(auth_cookie_cached)
@@ -127,8 +109,8 @@ def api_log_in() -> bool:
 
     # Save login cookie for subsequent runs.
     cookie_jar = vrc_api.rest_client.cookie_jar._cookies["api.vrchat.cloud"]["/"]
-    r_bin.set("vrcembed:cookies:auth", pickle.dumps(cookie_jar["auth"]))
-    r_bin.set(
+    cache.set_bin("vrcembed:cookies:auth", pickle.dumps(cookie_jar["auth"]))
+    cache.set_bin(
         "vrcembed:cookies:twofactorauth", pickle.dumps(cookie_jar["twoFactorAuth"])
     )
 
@@ -151,13 +133,11 @@ def get_vrc_user(user_id: str) -> Tuple[Union[dict, None], bool]:
       - Boolean representing cache hit; True if response was cached, False otherwise.
     """
     cache_key = f"vrcembed:users:{user_id}"
+    user = cache.get_json(cache_key)
+    user_cached = True
 
-    try:
-        user_cached = int(r.get(cache_key + ":cachetime") or 0)
-    except ValueError:
-        user_cached = 0
-
-    if not user_cached or (int(time.time()) - user_cached) > CACHE_TIMEOUT:
+    if not user:
+        user_cached = False
         user_api = users_api.UsersApi(vrc_api)
 
         try:
@@ -167,13 +147,9 @@ def get_vrc_user(user_id: str) -> Tuple[Union[dict, None], bool]:
             _user = user_api.get_user(user_id)
         except vrchatapi.exceptions.NotFoundException:
             user = None
-            r.set(cache_key, "{}")
+            cache.set(cache_key, "{}", timeout=CACHE_TIMEOUT)
         else:
             user = serialize_user(_user)
-            r.set(cache_key, json.dumps(user))
-        r.set(cache_key + ":cachetime", str(int(time.time())))
+            cache.set_json(cache_key, user, timeout=CACHE_TIMEOUT)
 
-    else:
-        user = json.loads(r.get(cache_key)) or None
-
-    return (user, not not user_cached)
+    return (user, user_cached)

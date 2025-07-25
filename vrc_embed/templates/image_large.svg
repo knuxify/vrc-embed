@@ -1,4 +1,5 @@
-<svg version="1.1" width="355" height="340" xmlns="http://www.w3.org/2000/svg" fill="#00000000">
+{% import "image_common.svg" as image_common %}
+<svg version="1.1" width="355" height="340" xmlns="http://www.w3.org/2000/svg">
      <style>
           :root { font-family: 'Noto Sans', sans-serif; }
           text { fill: {{ foreground_color or '#F8F9FA' }}; }
@@ -47,18 +48,14 @@
      <svg x="{{ 355 - 12 - 4 - text_width(last_seen_str, 'Noto Sans', 12) - 18 }}" y="18" width="10" height="12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="{{ foreground_color or '#F8F9FA' }}" d="M176 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l16 0 0 34.4C92.3 113.8 16 200 16 304c0 114.9 93.1 208 208 208s208-93.1 208-208c0-41.8-12.3-80.7-33.5-113.2l24.1-24.1c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L355.7 143c-28.1-23-62.2-38.8-99.7-44.6L256 64l16 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L224 0 176 0zm72 192l0 128c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-128c0-13.3 10.7-24 24-24s24 10.7 24 24z"></path></svg>
      <text id="last-seen" x="{{ 355 - 12 - 8 - text_width(last_seen_str, 'Noto Sans', 12) }}" y="23.5" dominant-baseline="central">{{last_seen_str}}</text>
 
-     <text id="data" x="20" y="245" dominant-baseline="central">
-          <tspan id="username">{{ user.display_name or user.username }}</tspan><tspan id="pronouns" x="20" dy="32.5">{{ user.pronouns }}</tspan>
-     </text>
+     <text id="username" x="20" y="245" dominant-baseline="central">{{ user.display_name or user.username }}</text>
+     <text id="pronouns" x="20" dy="280">{{ user.pronouns }}</text>
 
-     {%- if user.status == "active" -%}{% set status_color = "#2ED319" %}
-     {%- elif user.status == "join me" -%}{% set status_color = "#00B8FF" %}
-     {%- elif user.status == "ask me" -%}{% set status_color = "#E97C03" %}
-     {%- elif user.status == "busy" -%}{% set status_color = "#C80928" %}
-     {%- else -%}{% set status_color = "#737F8D" %}
+     {{ image_common.status_indicator(27.5, 311.5, user, ingame_only) }}
+
+     <text id="status" x="42" y="310" dominant-baseline="central">{{ image_common.status_description(user) }}</text>
+
+     {%- if logo_type == "big" -%}{{ image_common.vrc_logo_big(355 - 100 - 8, 340 - 40 - 6, 100, 40) }}
+     {%- elif logo_type == "small" -%}{{ image_common.vrc_logo_small(355-40-8, 340-40-6, 40, 40) }}
      {%- endif -%}
-     <circle id="state-indicator {% if user.state == 'offline' %}offline{% else %}{{  user.status.replace(' ', '-') }}{% endif %}{% if user.state == 'online' %} in-game{% endif %}" cx="27.5" {% if user.state == "online" %} cy="311.5" r="7.5" fill="{{ status_color }}" {% elif user.state == "active" %} cy="311.5" r="6" stroke="{{ status_color }}" stroke-width="3" fill="#252A30" {% else %} cy="311.5" r="7.5" fill="#737F8D" {% endif %}/>
-
-     <text id="status" x="42" y="310" dominant-baseline="central">{% if user.status_description %}{{ user.status_description }}{% else %}{% if user.state == "offline" %}Offline{% else %}{% if user.status == "active" %}Online{% elif user.status == "join me" %}Join Me{% elif user.status == "ask me" %}Ask Me{% elif user.status == "busy" %}Do Not Disturb{% else %}Offline{% endif %}{% endif %}{% endif %}</text>
-
 </svg>

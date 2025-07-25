@@ -5,10 +5,18 @@ import asyncio
 import datetime
 
 import timeago
-from quart import Quart, make_response, render_template, send_from_directory
+from quart import Quart, make_response, render_template, request, send_from_directory
+from quart_tasks import QuartTasks
 
 from .button import button_anim, button_static
-from .render import RENDERS_PATH, get_render_filename, render_exists, svg2png
+from .render import (
+    RENDERS_PATH,
+    get_render_filename,
+    image_cache,
+    render_exists,
+    svg2png,
+    svg_inline_images,
+)
 from .utils import text_width
 from .vrchat import api_log_in, get_vrc_user
 
@@ -16,6 +24,8 @@ app = Quart(__name__)
 app.jinja_env.globals.update(text_width=text_width)
 api_log_in()
 
+tasks = QuartTasks(app)
+tasks.add_cron_task(image_cache.prune_dormant, "0 */1 * * *")
 
 #: Valid embed types (templates) and which filetypes they support.
 EMBEDS = {
@@ -60,10 +70,12 @@ async def get_user_embed(user_id: str, embed_type: str):
         svg = await render_template(
             f"image_{embed_base_type}.svg", user=user, last_seen_str=last_seen_str
         )
+        if request.args.get("inlineimg", "false") == "true":
+            svg = await svg_inline_images(svg.encode("utf-8"))
 
         if filetype == "svg":
             resp = await make_response(svg)
-            resp.headers.set("Content-Type", "image/svg")
+            resp.headers.set("Content-Type", "image/svg+xml")
             return resp
 
         elif filetype == "png":

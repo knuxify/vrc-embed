@@ -2,14 +2,20 @@
 """Code for dealing with rendered files and rendering SVG to PNG."""
 
 import asyncio
+import atexit
 import base64
+import hashlib
 import os.path
+import tempfile
+import time
 import xml.etree.ElementTree as ET
 from typing import Optional
 
 import aiofiles
 import aiofiles.os
 import aiohttp
+import filetype
+from filetype.types import IMAGE as image_matchers
 from wand.color import Color
 from wand.image import Image
 
@@ -25,6 +31,83 @@ from .utils import get_base_path
 RENDERS_PATH = config["general"].get(
     "renders_path", os.path.join(get_base_path(), "renders")
 )
+
+
+class ImageCache:
+    """Image file cache manager."""
+
+    def __init__(self):
+        """Initialize the image cache manager."""
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.path = self.tmpdir.name
+
+        #: Last cache hit for each stored image.
+        self.last_hit = {}
+
+        #: List of files which are currently being downloaded.
+        self.download_queue = set()
+
+    def close_tmpdir(self):
+        """
+        Close the temporary directory.
+
+        After calling this, the ImageCache object should no longer be used.
+        """
+        self.tmpdir.cleanup()
+        del self.last_hit
+
+    async def get(self, url: str) -> bytes:
+        """Download an image or fetch it from the cache."""
+        url_hash = await asyncio.to_thread(
+            lambda url: hashlib.sha512(url.encode("utf-8")).hexdigest(), url
+        )
+        self.last_hit[url_hash] = time.time()
+
+        path = os.path.join(self.path, url_hash)
+
+        # If the URL is currently being downloaded, wait until that download finishes
+        while url in self.download_queue:
+            await asyncio.sleep(0.05)
+        self.download_queue.add(url)
+
+        # If we have a cached file, serve it
+        if await aiofiles.os.path.exists(path):
+            self.download_queue.remove(url)
+            async with aiofiles.open(path, "rb") as f:
+                return await f.read()
+
+        # Otherwise, download the image file and save it to the cache
+        else:
+            ret = bytes()
+            headers = {
+                "User-Agent": "vrc-embed/0.0.1 (https://github.com/knuxify/vrc-embed)"
+            }
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url, headers=headers) as response:
+                        async with aiofiles.open(path, "wb") as f:
+                            async for chunk in response.content.iter_chunked(4096):
+                                await f.write(chunk)
+                                ret += chunk
+            except:  # noqa: E722
+                ret = None
+
+            self.download_queue.remove(url)
+
+            return ret
+
+    async def prune_dormant(self):
+        """Prune unused images that haven't been used in a while."""
+        now = time.time()
+        for url_hash, last_hit in list(self.last_hit.items()).copy():
+            if (now - last_hit) > (60 * 60 * 12):
+                del self.last_hit[url_hash]
+                await aiofiles.os.remove(os.path.join(self.path, url_hash))
+
+
+#: Image cache handler.
+image_cache = ImageCache()
+atexit.register(image_cache.close_tmpdir)
 
 
 def get_render_filename(user_id: str, embed_base_type: str, filetype: str) -> str:
@@ -84,18 +167,16 @@ async def svg_inline_images(source: bytes) -> bytes:
 
     # Common function for performing the inline action on an <image> element:
     async def _inline_image(img):
-        # Download the image file
-        headers = {
-            "User-Agent": "vrc-embed/0.0.1 (https://github.com/knuxify/vrc-embed)"
-        }
-        async with aiohttp.ClientSession() as session:
-            async with session.get(img.attrib["href"], headers=headers) as response:
-                data = await response.read()
+        data = await image_cache.get(img.attrib["href"])
 
         # Base64-encode the image data and replace href attribute
         b64 = await asyncio.to_thread(base64.b64encode, data)
         b64_str = await asyncio.to_thread(b64.decode, "ascii")
-        img.attrib["href"] = "data:image/png;base64," + b64_str
+        mimetype = filetype.match(data, matchers=image_matchers)
+        if mimetype:
+            img.attrib["href"] = f"data:{mimetype.mime};base64," + b64_str
+        else:
+            img.attrib["href"] = "data:base64," + b64_str
 
     # Run the above function in a taskgroup so that multiple files can be downloaded
     # at once.
