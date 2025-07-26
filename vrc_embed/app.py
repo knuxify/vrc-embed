@@ -42,9 +42,8 @@ EMBEDS = {
 OPTS = {
     "pfp_url": {"type": ("url", None)},
     "banner_url": {"type": ("url", None)},
-    "components": {
+    "hide": {
         "type": ("list", ("enum", ["lastseen", "pfp", "pronouns"])),
-        "default": "lastseen,pfp,pronouns",
     },
     "logo": {"type": ("enum", ["big", "small", "none"]), "default": "small"},
     "logo_position": {
@@ -84,7 +83,7 @@ async def get_user_embed(user_id: str, embed_type: str):
         except ValueError as e:
             return {"error": str(e)}, 400
 
-        if "lastseen" in opts["components"]:
+        if "lastseen" not in opts["hide"]:
             last_seen_str = timeago.format(
                 datetime.datetime.fromisoformat(user["last_activity"]).replace(
                     tzinfo=datetime.timezone.utc
