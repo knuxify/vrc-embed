@@ -1,5 +1,6 @@
 {% import "image_common.svg" as image_common %}
-<svg version="1.1" width="355" height="340" xmlns="http://www.w3.org/2000/svg">
+{% set img_height = 340 if 'pronouns' in opts.components else 322 %}
+<svg version="1.1" width="355" height="{{ img_height }}" xmlns="http://www.w3.org/2000/svg">
      <style>
           :root { font-family: 'Noto Sans', sans-serif; }
           text { fill: {{ foreground_color or '#F8F9FA' }}; }
@@ -30,32 +31,41 @@
           </filter>
      </defs>
 
-     <rect x="0" y="0" width="355" height="340" rx="8" ry="8" fill="{{ background_color or '#181B1F' }}"/>
+     <rect x="0" y="0" width="355" height="{{ img_height }}" rx="8" ry="8" fill="{{ background_color or '#181B1F' }}"/>
 
-     <image id="banner-img" x="0" y="0" width="355" height="215" href="{{ banner_url or user.profile_pic_override_thumbnail or user.current_avatar_thumbnail_image_url }}" mask="url(#banner-mask)" preserveAspectRatio="xMidYMid slice"/>
+     <image id="banner-img" x="0" y="0" width="355" height="215" href="{{ opts.banner_url or user.profile_pic_override_thumbnail or user.current_avatar_thumbnail_image_url }}" mask="url(#banner-mask)" preserveAspectRatio="xMidYMid slice"/>
 
-     {%- if pfp_url or user.user_icon -%}
+     {%- if "pfp" in opts.components and (opts.pfp_url or user.user_icon_thumbnail) -%}
      {%- if user.state == "online" -%}
           {% set pfp_bg_color = "rgb(81, 229, 126)" %}
      {%- else -%}
           {% set pfp_bg_color = "rgb(128, 128, 128)" %}
      {%- endif -%}
      <circle id="pfp-bg" cx="57" cy="158" r="45" fill="{{ pfp_bg_color }}" filter="url(#pfp-shadow)"/>
-     <image id="pfp-img" x="14" y="115" width="86" height="86" href="{{pfp_url or user.user_icon }}" mask="url(#pfp-mask)"/>
+     <image id="pfp-img" x="14" y="115" width="86" height="86" href="{{ opts.pfp_url or (user.user_icon_thumbnail) }}" mask="url(#pfp-mask)"/>
      {%- endif -%}
 
+     {% if 'lastseen' in opts.components %}
      <rect id="last-seen-bg" fill="rgba(17, 17, 17, 0.8)" x="{{ 355 - 12 - 4 - 8 - text_width(last_seen_str, 'Noto Sans', 12) - 18 }}" y="12" width="{{ text_width(last_seen_str, 'Noto Sans', 12) + 18 + 8 + 4}}" height="24" rx="12"/>
-     <svg x="{{ 355 - 12 - 4 - text_width(last_seen_str, 'Noto Sans', 12) - 18 }}" y="18" width="10" height="12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="{{ foreground_color or '#F8F9FA' }}" d="M176 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l16 0 0 34.4C92.3 113.8 16 200 16 304c0 114.9 93.1 208 208 208s208-93.1 208-208c0-41.8-12.3-80.7-33.5-113.2l24.1-24.1c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L355.7 143c-28.1-23-62.2-38.8-99.7-44.6L256 64l16 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L224 0 176 0zm72 192l0 128c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-128c0-13.3 10.7-24 24-24s24 10.7 24 24z"></path></svg>
+     <svg x="{{ 355 - 12 - 4 - text_width(last_seen_str, 'Noto Sans', 12) - 18 }}" y="18" width="10" height="12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.x.x by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path fill="{{ foreground_color or '#F8F9FA' }}" d="M176 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l16 0 0 34.4C92.3 113.8 16 200 16 304c0 114.9 93.1 208 208 208s208-93.1 208-208c0-41.8-12.3-80.7-33.5-113.2l24.1-24.1c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L355.7 143c-28.1-23-62.2-38.8-99.7-44.6L256 64l16 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L224 0 176 0zm72 192l0 128c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-128c0-13.3 10.7-24 24-24s24 10.7 24 24z"></path></svg>
      <text id="last-seen" x="{{ 355 - 12 - 8 - text_width(last_seen_str, 'Noto Sans', 12) }}" y="23.5" dominant-baseline="central">{{last_seen_str}}</text>
+     {% endif %}
 
      <text id="username" x="20" y="245" dominant-baseline="central">{{ user.display_name or user.username }}</text>
-     <text id="pronouns" x="20" dy="280">{{ user.pronouns }}</text>
+     {% if 'pronouns' in opts.components %}<text id="pronouns" x="20" dy="280">{{ user.pronouns }}</text>{% endif %}
 
-     {{ image_common.status_indicator(27.5, 311.5, user, ingame_only) }}
+     {{ image_common.status_indicator(27.5, img_height - 28.5, user, ingame_only) }}
 
-     <text id="status" x="42" y="310" dominant-baseline="central">{{ image_common.status_description(user) }}</text>
+     <text id="status" x="42" y="{{ img_height - 30 }}" dominant-baseline="central">{{ image_common.status_description(user) }}</text>
 
-     {%- if logo_type == "big" -%}{{ image_common.vrc_logo_big(355 - 100 - 8, 340 - 40 - 6, 100, 40) }}
-     {%- elif logo_type == "small" -%}{{ image_common.vrc_logo_small(355-40-8, 340-40-6, 40, 40) }}
+     {%- if opts.logo == "big" -%}{% set logo_w = 100 %}{% set logo_h = 40 %}
+     {%- elif opts.logo == "small" -%}{% set logo_w = 40 %}{% set logo_h = 40 %}
+     {%- endif -%}
+     {%- if opts.logo_position == "topleft" -%}{% set logo_x = 12 %}{% set logo_y = 12 %}
+     {%- elif opts.logo_position == "datatop" -%}{% set logo_x = 355 - logo_w - 20 %}{% set logo_y = 229.5 %}
+     {%- elif opts.logo_position == "databottom" -%}{% set logo_x = 355 - logo_w - 20 %}{% set logo_y = img_height - logo_h - 5.5 %}
+     {%- endif -%}
+     {%- if opts.logo == "big" -%}{{ image_common.vrc_logo_big(logo_x, logo_y, logo_w, logo_h) }}
+     {%- elif opts.logo == "small" -%}{{ image_common.vrc_logo_small(logo_x, logo_y, logo_w, logo_h) }}
      {%- endif -%}
 </svg>

@@ -9,6 +9,7 @@ from quart import Quart, make_response, render_template, request, send_from_dire
 from quart_tasks import QuartTasks
 
 from .button import button_anim, button_static
+from .opts import OptionsManager
 from .render import (
     RENDERS_PATH,
     get_render_filename,
@@ -18,7 +19,7 @@ from .render import (
     svg_inline_images,
 )
 from .utils import text_width
-from .vrchat import api_log_in, get_vrc_user
+from .vrchat import CACHE_TIMEOUT, api_log_in, get_vrc_user
 
 app = Quart(__name__)
 app.jinja_env.globals.update(text_width=text_width)
@@ -35,6 +36,24 @@ EMBEDS = {
     "button-anim": ("gif",),
     "button-static": ("png", "gif"),
 }
+
+#: Valid configuration options for the embeds and their types.
+#: For an explanation of the type system, see OptionsManager in opts.py.
+OPTS = {
+    "pfp_url": {"type": ("url", None)},
+    "banner_url": {"type": ("url", None)},
+    "components": {
+        "type": ("list", ("enum", ["lastseen", "pfp", "pronouns"])),
+        "default": "lastseen,pfp,pronouns",
+    },
+    "logo": {"type": ("enum", ["big", "small", "none"]), "default": "small"},
+    "logo_position": {
+        "type": ("enum", ["topleft", "datatop", "databottom"]),
+        "default": "datatop",
+    },
+}
+
+options_parser = OptionsManager(OPTS)
 
 
 @app.route("/<user_id>/<embed_type>")
@@ -60,15 +79,26 @@ async def get_user_embed(user_id: str, embed_type: str):
         return await asyncio.to_thread(button_static(filetype, user))
 
     else:
-        last_seen_str = timeago.format(
-            datetime.datetime.fromisoformat(user["last_activity"]).replace(
-                tzinfo=datetime.timezone.utc
-            ),
-            datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc),
-        )
+        try:
+            opts = options_parser.parse_args(request.args)
+        except ValueError as e:
+            return {"error": str(e)}, 400
+
+        if "lastseen" in opts["components"]:
+            last_seen_str = timeago.format(
+                datetime.datetime.fromisoformat(user["last_activity"]).replace(
+                    tzinfo=datetime.timezone.utc
+                ),
+                datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc),
+            )
+        else:
+            last_seen_str = None
 
         svg = await render_template(
-            f"image_{embed_base_type}.svg", user=user, last_seen_str=last_seen_str
+            f"image_{embed_base_type}.svg",
+            user=user,
+            last_seen_str=last_seen_str,
+            opts=opts,
         )
         if request.args.get("inlineimg", "false") == "true":
             svg = await svg_inline_images(svg.encode("utf-8"))
@@ -76,6 +106,7 @@ async def get_user_embed(user_id: str, embed_type: str):
         if filetype == "svg":
             resp = await make_response(svg)
             resp.headers.set("Content-Type", "image/svg+xml")
+            resp.headers.set("Cache-Control", f"maxage={CACHE_TIMEOUT}")
             return resp
 
         elif filetype == "png":
@@ -86,6 +117,7 @@ async def get_user_embed(user_id: str, embed_type: str):
             png = await svg2png(bytes(svg, "utf-8"), render_filename)
             resp = await make_response(png)
             resp.headers.set("Content-Type", "image/png")
+            resp.headers.set("Cache-Control", f"maxage={CACHE_TIMEOUT}")
             return resp
 
 
