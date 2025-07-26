@@ -25,7 +25,7 @@ vrc_api.user_agent = "vrc-embed/0.0.1 (https://github.com/knuxify/vrc-embed)"
 LOGGED_IN = False
 
 #: Cache timeout, in seconds.
-CACHE_TIMEOUT: int = config["general"].get("vrc_cache_timeout", 60)
+CACHE_TIMEOUT: int = config["vrchat"].get("cache_timeout", 60)
 
 #: Properties to include in the cache for VRChat users. All properties used in
 #: the templates should be included in this list.
@@ -119,7 +119,15 @@ def api_log_in() -> bool:
 
 def serialize_user(user: vrchatapi.models.user.User) -> dict:
     """Serialize user data into a dictionary."""
-    return dict((k, (getattr(user, k) or "")) for k in USER_CACHED_PROPERTIES)
+    out = dict((k, (getattr(user, k) or "")) for k in USER_CACHED_PROPERTIES)
+
+    # Manually add the user icon thumbnail field
+    if out["user_icon"]:
+        out["user_icon_thumbnail"] = (
+            out["user_icon"].replace("/api/1/file", "/api/1/image") + "/128"
+        )
+
+    return out
 
 
 def get_vrc_user(user_id: str) -> Tuple[Union[dict, None], bool]:
@@ -149,6 +157,7 @@ def get_vrc_user(user_id: str) -> Tuple[Union[dict, None], bool]:
             user = None
             cache.set(cache_key, "{}", timeout=CACHE_TIMEOUT)
         else:
+            print(_user)
             user = serialize_user(_user)
             cache.set_json(cache_key, user, timeout=CACHE_TIMEOUT)
 
