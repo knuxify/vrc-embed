@@ -149,7 +149,6 @@ async def get_user_embed(user_id: str, embed_type: str):
             return resp
 
         elif filetype == "png":
-            print(opts, type(opts))
             render_filename = get_render_filename(
                 user_id, embed_base_type, opts, filetype
             )
