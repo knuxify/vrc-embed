@@ -8,6 +8,7 @@ import timeago
 from quart import Quart, make_response, render_template, request, send_from_directory
 from quart_tasks import QuartTasks
 
+from . import config
 from .button import button_anim, button_static
 from .opts import OptionsManager
 from .render import (
@@ -40,6 +41,7 @@ EMBEDS = {
 #: Valid configuration options for the embeds and their types.
 #: For an explanation of the type system, see OptionsManager in opts.py.
 OPTS = {
+    "inline_img": {"type": ("bool", None), "default": "false"},
     "pfp_url": {"type": ("url", None)},
     "banner_url": {"type": ("url", None)},
     "hide": {
@@ -87,6 +89,18 @@ async def get_user_embed(user_id: str, embed_type: str):
         except ValueError as e:
             return {"error": str(e)}, 400
 
+        if config["general"].get("block_custom_pfp_and_banner", False) and (
+            "pfp_url" in opts or "banner_url" in opts
+        ):
+            return {"error": "This instance does not allow custom pfp/banner URLs"}
+
+        if config["general"].get("no_render_for_custom_pfp_and_banner") and (
+            filetype != "svg" or opts["inline_img"]
+        ):
+            return {
+                "error": "This instance does not allow renders with custom pfp/banner URLs"
+            }
+
         if "lastseen" not in opts["hide"]:
             last_seen_str = timeago.format(
                 datetime.datetime.fromisoformat(user["last_activity"]).replace(
@@ -103,7 +117,7 @@ async def get_user_embed(user_id: str, embed_type: str):
             last_seen_str=last_seen_str,
             opts=opts,
         )
-        if request.args.get("inlineimg", "false") == "true":
+        if opts["inline_img"]:
             svg = await svg_inline_images(svg.encode("utf-8"))
 
         if filetype == "svg":

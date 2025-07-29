@@ -1,13 +1,21 @@
 ## vrc-embed configuration
 
 [general]
-
 # Contact email for abuse reports. This is listed on the index page.
 contact="you@example.com"
 
 # Custom render cache folder; needs to be writable by the vrc-embed process.
 # By default, saves to the "renders" folder in the repo clone directory.
 # renders_path="/path/to/renders"
+
+# For further customizability without VRC+, the user can provide their own
+# profile picture or banner URL.
+# If you would like to prevent this, set the following option to true:
+# block_custom_pfp_and_banner=false
+
+# If you're fine with this, but don't want to include renders, enable the
+# following option:
+# no_render_for_custom_pfp_and_banner=false
 
 ## A VRChat account is needed to access the user API.
 [vrchat]
@@ -40,6 +48,10 @@ password="correct horse battery staple"
 # vrc-embed accepts both secret styles.
 
 # totp="abcd abcd abcd abcd abcd abcd abcd abcd"
+
+# How long VRChat user profile data should be held in the cache, in seconds.
+# Defaults to 60 seconds (1 minute).
+# cache_timeout = 60
 
 ## Redis is used for caching user data, as well as the login cookies.
 [redis]
