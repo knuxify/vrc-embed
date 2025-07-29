@@ -3,7 +3,7 @@
 <svg version="1.1" width="355" height="{{ img_height }}" xmlns="http://www.w3.org/2000/svg">
      <style>
           :root { font-family: 'Noto Sans', sans-serif; }
-          text { fill: {{ foreground_color or '#F8F9FA' }}; }
+          text { fill: {{ opts.foreground_color or '#F8F9FA' }}; }
           #last-seen { font-size: 12px; }
           #username { font-size: 32px; font-weight: bold; }
           #pronouns { font-size: 12.8px; font-weight: bold; }
@@ -31,9 +31,9 @@
           </filter>
      </defs>
 
-     <rect x="0" y="0" width="355" height="{{ img_height }}" rx="8" ry="8" fill="{{ background_color or '#181B1F' }}"/>
+     <rect id="background" x="0" y="0" width="355" height="{{ img_height }}" rx="8" ry="8" fill="{{ opts.background_color or '#181B1F' }}"/>
 
-     <image id="banner-img" x="0" y="0" width="355" height="215" href="{{ opts.banner_url or user.profile_pic_override_thumbnail or user.current_avatar_thumbnail_image_url }}" mask="url(#banner-mask)" preserveAspectRatio="xMidYMid slice"/>
+     <image id="banner-img" x="0" y="0" width="355" height="215" href="{{ image_common.banner_url(opts, user) }}" mask="url(#banner-mask)" preserveAspectRatio="xMidYMid slice"/>
 
      {%- if "pfp" not in opts.hide and (opts.pfp_url or user.user_icon_thumbnail) -%}
      {%- if user.state == "online" -%}
@@ -42,7 +42,7 @@
           {% set pfp_bg_color = "rgb(128, 128, 128)" %}
      {%- endif -%}
      <circle id="pfp-bg" cx="57" cy="158" r="45" fill="{{ pfp_bg_color }}" filter="url(#pfp-shadow)"/>
-     <image id="pfp-img" x="14" y="115" width="86" height="86" href="{{ opts.pfp_url or (user.user_icon_thumbnail) }}" mask="url(#pfp-mask)"/>
+     <image id="pfp-img" x="14" y="115" width="86" height="86" href="{{ opts.pfp_url or image_common.vrc_image_size(user.user_icon_thumbnail, 128) }}" mask="url(#pfp-mask)"/>
      {%- endif -%}
 
      {% if 'lastseen' not in opts.hide %}
@@ -52,11 +52,11 @@
      {% endif %}
 
      <text id="username" x="20" y="245" dominant-baseline="central">{{ user.display_name or user.username }}</text>
-     {% if 'pronouns' not in opts.hide %}<text id="pronouns" x="20" dy="280">{{ user.pronouns }}</text>{% endif %}
+     {% if 'pronouns' not in opts.hide %}<text id="pronouns" x="20" y="280">{{ user.pronouns }}</text>{% endif %}
 
-     {{ image_common.status_indicator(27.5, img_height - 28.5, user, ingame_only) }}
+     {{ image_common.status_indicator(27.5, img_height - 28.5, user, opts.ingame_only) }}
 
-     <text id="status" x="42" y="{{ img_height - 30 }}" dominant-baseline="central">{{ image_common.status_description(user) }}</text>
+     <text id="status" x="42" y="{{ img_height - 30 }}" dominant-baseline="central">{{ image_common.status_description(user, opts.ingame_only) }}</text>
 
      {%- if opts.logo == "big" -%}{% set logo_w = 100 %}{% set logo_h = 40 %}
      {%- elif opts.logo == "small" -%}{% set logo_w = 40 %}{% set logo_h = 40 %}

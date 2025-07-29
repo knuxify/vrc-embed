@@ -10,8 +10,28 @@
      <circle id="status-indicator {% if user.state == 'offline' %}offline{% else %}{{ user.status.replace(' ', '-') }}{% endif %}{% if user.state == 'online' %} in-game{% endif %}" cx="{{cx}}" cy="{{cy}}" {% if user.state == "online" %}r="7.5" fill="{{ status_color }}" {% elif user.state == "active" and not ingame_only %}r="6" stroke="{{ status_color }}" stroke-width="3" fill="#252A30" {% else %} r="7.5" fill="#737F8D" {% endif %}/>
 {%- endmacro -%}
 
-{%- macro status_description(user) -%}
-{% if user.status_description %}{{ user.status_description }}{% else %}{% if user.state == "offline" %}Offline{% else %}{% if user.status == "active" %}Online{% elif user.status == "join me" %}Join Me{% elif user.status == "ask me" %}Ask Me{% elif user.status == "busy" %}Do Not Disturb{% else %}Offline{% endif %}{% endif %}{% endif %}
+{%- macro status_description(user, ingame_only) -%}
+{% if user.status_description %}{{ user.status_description }}{% else %}{% if user.state == "offline" %}Offline{% else %}{% if user.status == "active" and not ingame_only %}Online{% elif user.status == "join me" %}Join Me{% elif user.status == "ask me" %}Ask Me{% elif user.status == "busy" %}Do Not Disturb{% else %}Offline{% endif %}{% endif %}{% endif %}
+{%- endmacro -%}
+
+{# vrc_image_size: Get image from /api/v1/image at the specified size. #}
+{%- macro vrc_image_size(url, size) -%}
+{%- if url.startswith("https://api.vrchat.cloud/api/1/file") -%}{% set _url = url.replace("/api/1/file", "/api/1/image") -%}
+{%- else -%}{% set _url = url %}
+{%- endif -%}
+{%- if url.endswith("/") -%}{% set _url = url[:-1] %}{%- endif -%}
+{%- if _url.startswith("https://api.vrchat.cloud/api/1/image") -%}
+  {# Explanation of the below check: we check how many levels down we are in the URL. If we have 8 slashes (https://api.vrchat.cloud/api/v1/image/.../1/512), we have the size already provided, and need to replace it; if we have 7 slashes, the size is not provided and we need to set it manually. #}
+  {%- if _url.count("/") == 8 -%}{{_url[:-4]}}/{{size}}
+  {%- elif _url.count("/") == 7 -%}{{_url}}/{{size}}
+  {%- else -%}{{url}}
+  {%- endif -%}
+{%- else -%}{{url}}
+{%- endif -%}
+{%- endmacro -%}
+
+{%- macro banner_url(opts, user) -%}
+{{ opts.banner_url or (image_common.vrc_image_size(user.profile_pic_override_thumbnail, 512) if user.profile_pic_override_thumbnail) or (image_common.vrc_image_size(user.current_avatar_thumbnail_image_url, 512) if user.current_avatar_thumbnail_image_url)}}
 {%- endmacro -%}
 
 {%- macro vrc_logo_small(x, y, width, height) -%}

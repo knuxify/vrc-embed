@@ -44,12 +44,16 @@ OPTS = {
     "banner_url": {"type": ("url", None)},
     "hide": {
         "type": ("list", ("enum", ["lastseen", "pfp", "pronouns"])),
+        "default": "",
     },
     "logo": {"type": ("enum", ["big", "small", "none"]), "default": "small"},
     "logo_position": {
         "type": ("enum", ["topleft", "datatop", "databottom"]),
         "default": "datatop",
     },
+    "background_color": {"type": ("str", None)},
+    "foreground_color": {"type": ("str", None)},
+    "ingame_only": {"type": ("bool", None), "default": "false"},
 }
 
 options_parser = OptionsManager(OPTS)
