@@ -157,7 +157,6 @@ def get_vrc_user(user_id: str) -> Tuple[Union[dict, None], bool]:
             user = None
             cache.set(cache_key, "{}", timeout=CACHE_TIMEOUT)
         else:
-            print(_user)
             user = serialize_user(_user)
             cache.set_json(cache_key, user, timeout=CACHE_TIMEOUT)
 
