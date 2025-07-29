@@ -5,6 +5,7 @@ import asyncio
 import atexit
 import base64
 import hashlib
+import json
 import os.path
 import tempfile
 import time
@@ -15,6 +16,7 @@ import aiofiles
 import aiofiles.os
 import aiohttp
 import filetype
+import json_fingerprint
 from filetype.types import IMAGE as image_matchers
 from wand.color import Color
 from wand.image import Image
@@ -110,12 +112,19 @@ image_cache = ImageCache()
 atexit.register(image_cache.close_tmpdir)
 
 
-def get_render_filename(user_id: str, embed_base_type: str, filetype: str) -> str:
+def get_render_filename(
+    user_id: str, embed_base_type: str, opts: dict, filetype: str
+) -> str:
     """
     Get the render filename for the given parameters.
 
     Note that this only contains the filename, not the renders directory.
     """
+    if opts:
+        fp = json_fingerprint.create(
+            json.dumps(opts), json_fingerprint.hash_functions.SHA256, 1
+        ).split("$")[2]
+        return user_id + "." + embed_base_type + "." + fp + "." + filetype
     return user_id + "." + embed_base_type + "." + filetype
 
 

@@ -149,7 +149,10 @@ async def get_user_embed(user_id: str, embed_type: str):
             return resp
 
         elif filetype == "png":
-            render_filename = get_render_filename(user_id, embed_base_type, filetype)
+            print(opts, type(opts))
+            render_filename = get_render_filename(
+                user_id, embed_base_type, opts, filetype
+            )
             if user_cached and await render_exists(render_filename):
                 return await send_from_directory(RENDERS_PATH, render_filename)
 

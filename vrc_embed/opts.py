@@ -34,6 +34,10 @@ class OptionsManager:
 
     def parse_args(self, args: ImmutableMultiDict) -> dict:
         """Parse request.args into options."""
+        for arg in args.keys():
+            if arg not in self.options:
+                raise ValueError(f"Unknown option {arg}")
+
         out = {}
         for opt, data in self.options.items():
             value = args.get(opt, None)

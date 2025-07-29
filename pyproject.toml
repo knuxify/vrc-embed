@@ -23,6 +23,7 @@ dependencies = [
     "toml; python_version < '3.11'",
     "vrchatapi",
     "wand",
+    "json-fingerprint (>=0.14.1,<0.15.0)",
 ]
 
 

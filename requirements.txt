@@ -1,6 +1,7 @@
 aiohttp
 aiofiles
 filetype
+json_fingerprint
 pillow
 pyotp
 quart
