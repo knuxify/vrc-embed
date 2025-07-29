@@ -30,8 +30,8 @@
 {%- endif -%}
 {%- endmacro -%}
 
-{%- macro banner_url(opts, user) -%}
-{{ opts.banner_url or (image_common.vrc_image_size(user.profile_pic_override_thumbnail, 512) if user.profile_pic_override_thumbnail) or (image_common.vrc_image_size(user.current_avatar_thumbnail_image_url, 512) if user.current_avatar_thumbnail_image_url)}}
+{%- macro banner_url(opts, user, size) -%}
+{{ opts.banner_url or (vrc_image_size(user.profile_pic_override_thumbnail, size) if user.profile_pic_override_thumbnail) or (vrc_image_size(user.current_avatar_thumbnail_image_url, size) if user.current_avatar_thumbnail_image_url)}}
 {%- endmacro -%}
 
 {%- macro vrc_logo_small(x, y, width, height) -%}

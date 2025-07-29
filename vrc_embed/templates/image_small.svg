@@ -1,0 +1,56 @@
+{% import "image_common.svg" as image_common %}
+<svg version="1.1" width="{{ opts.width }}" height="150" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            :root { font-family: 'Noto Sans', sans-serif; }
+            text { fill: {{ opts.foreground_color or '#F8F9FA' }}; }
+            #last-seen { font-size: 12px; }
+            #username { font-size: 22px; font-weight: bold; }
+            #pronouns { font-size: 12px; font-weight: bold; opacity: 0.6; }
+            #status { font-size: 14px; font-weight: bold; }
+        </style>
+        <mask id="banner-mask">
+            <rect x="0" y="0" width="{{ opts.width }}" height="8" fill="black"/>
+            <rect rx="8" ry="8" width="{{ opts.width }}" height="215" fill="white"/>
+            <rect x="0" y="207" width="{{ opts.width }}" height="8" fill="white"/>
+        </mask>
+        <mask id="pfp-mask">
+            <circle cx="40" cy="40" r="30" fill="white"/>
+        </mask>
+        <filter id="pfp-shadow">
+            <feDropShadow dx="0" dy="4" stdDeviation="2" flood-color="rgba(10, 10, 13, 0.55)" />
+        </filter>
+    </defs>
+
+    <rect id="background" x="0" y="0" width="{{ opts.width }}" height="150" rx="8" ry="8" fill="{{ opts.background_color or '#181B1F' }}"/>
+
+    <image id="banner-img" x="0" y="0" width="{{ opts.width }}" height="80" href="{{ image_common.banner_url(opts, user, 256) }}" mask="url(#banner-mask)" preserveAspectRatio="xMidYMid slice"/>
+
+    {%- if opts.pfp and (opts.pfp_url or user.user_icon_thumbnail) -%}
+    {%- if user.state == "online" -%}
+        {% set pfp_bg_color = "rgb(81, 229, 126)" %}
+    {%- else -%}
+        {% set pfp_bg_color = "rgb(128, 128, 128)" %}
+    {%- endif -%}
+    <circle id="pfp-bg" cx="40" cy="40" r="32" fill="{{ pfp_bg_color }}" filter="url(#pfp-shadow)"/>
+    <image id="pfp-img" x="8" y="9" width="62" height="62" href="{{ opts.pfp_url or image_common.vrc_image_size(user.user_icon_thumbnail, 64) }}" mask="url(#pfp-mask)"/>
+    {%- endif -%}
+
+    {% if opts.lastseen %}
+     <rect id="last-seen-bg" fill="rgba(17, 17, 17, 0.8)" x="{{ opts.width - 8 - 4 - 8 - text_width(last_seen_str, 'Noto Sans', 12) - 18 }}" y="8" width="{{ text_width(last_seen_str, 'Noto Sans', 12) + 18 + 8 + 4}}" height="24" rx="12"/>
+     <svg x="{{ opts.width - 8 - 4 - text_width(last_seen_str, 'Noto Sans', 12) - 18 }}" y="14" width="10" height="12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.x.x by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc. --><path fill="{{ foreground_color or '#F8F9FA' }}" d="M176 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l16 0 0 34.4C92.3 113.8 16 200 16 304c0 114.9 93.1 208 208 208s208-93.1 208-208c0-41.8-12.3-80.7-33.5-113.2l24.1-24.1c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L355.7 143c-28.1-23-62.2-38.8-99.7-44.6L256 64l16 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L224 0 176 0zm72 192l0 128c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-128c0-13.3 10.7-24 24-24s24 10.7 24 24z"></path></svg>
+     <text id="last-seen" x="{{ opts.width - 8 - 8 - text_width(last_seen_str, 'Noto Sans', 12) }}" y="20" dominant-baseline="central">{{last_seen_str}}</text>
+    {% endif %}
+
+    <text id="data" y="100">
+        <tspan id="username" x="10" dominant-baseline="central">{{ user.display_name or user.username }}</tspan>
+        {% if opts.pronouns %}<tspan id="pronouns" dx="4" dy="8">{{ user.pronouns }}</tspan>{% endif %}
+    </text>
+
+    {{ image_common.status_indicator(17, 150-19.5, user, opts.ingame_only) }}
+    <text id="status" x="29" y="{{ 150 - 19.5 }}" dominant-baseline="central">{{ image_common.status_description(user, opts.ingame_only) }}</text>
+
+    {%- if opts.logo == "big" -%}{{ image_common.vrc_logo_big(opts.width - 58, 120, 50, 24) }}
+    {%- elif opts.logo == "small" -%}{{ image_common.vrc_logo_small(opts.width - 32, 120, 24, 24) }}
+    {%- endif -%}
+</svg>

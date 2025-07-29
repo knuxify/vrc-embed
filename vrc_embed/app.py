@@ -32,33 +32,54 @@ tasks.add_cron_task(image_cache.prune_dormant, "0 */1 * * *")
 #: Valid embed types (templates) and which filetypes they support.
 EMBEDS = {
     "large": ("svg", "png"),
-    "medium": ("svg", "png"),
     "small": ("svg", "png"),
+    "tiny": ("svg", "png"),
     "button-anim": ("gif",),
     "button-static": ("png", "gif"),
 }
 
-#: Valid configuration options for the embeds and their types.
+#: Common configuration options for all embeds.
 #: For an explanation of the type system, see OptionsManager in opts.py.
-OPTS = {
-    "inline_img": {"type": ("bool", None), "default": "false"},
-    "pfp_url": {"type": ("url", None)},
-    "banner_url": {"type": ("url", None)},
-    "hide": {
-        "type": ("list", ("enum", ["lastseen", "pfp", "pronouns"])),
-        "default": "",
-    },
+COMMON_OPTS = {
+    "inline_img": {"type": ("bool",), "default": "false"},
+    "pfp_url": {"type": ("url",)},
+    "banner_url": {"type": ("url",)},
     "logo": {"type": ("enum", ["big", "small", "none"]), "default": "small"},
-    "logo_position": {
-        "type": ("enum", ["topleft", "datatop", "databottom"]),
-        "default": "datatop",
-    },
-    "background_color": {"type": ("str", None)},
-    "foreground_color": {"type": ("str", None)},
-    "ingame_only": {"type": ("bool", None), "default": "false"},
+    "background_color": {"type": ("str",)},
+    "foreground_color": {"type": ("str",)},
+    "ingame_only": {"type": ("bool",), "default": "false"},
 }
 
-options_parser = OptionsManager(OPTS)
+#: Options for each embed type.
+EMBED_OPTS = {
+    "large": OptionsManager(COMMON_OPTS | {
+        "logo_position": {
+            "type": ("enum", ["topleft", "datatop", "databottom"]),
+            "default": "datatop",
+        },
+        "width": { "type": ("int",), "default": "355" },
+
+        "pfp": {"type": ("bool",), "default": "true"},
+        "lastseen": {"type": ("bool",), "default": "true"},
+        "pronouns": {"type": ("bool",), "default": "true"},
+    }),
+    "small": OptionsManager(COMMON_OPTS | {
+        "width": { "type": ("int",), "default": "250" },
+
+        "pfp": {"type": ("bool",), "default": "true"},
+        "lastseen": {"type": ("bool",), "default": "true"},
+        "pronouns": {"type": ("bool",), "default": "true"},
+    }),
+    "tiny": OptionsManager(COMMON_OPTS | {
+        "width": { "type": ("int",), "default": "250" },
+
+        "pfp": {"type": ("bool",), "default": "true"},
+        "lastseen": {"type": ("bool",), "default": "false"},
+        "pronouns": {"type": ("bool",), "default": "true"},
+    }),
+    "button-anim": OptionsManager(COMMON_OPTS),
+    "button-static": OptionsManager(COMMON_OPTS),
+}  # fmt: skip
 
 
 @app.route("/<user_id>/<embed_type>")
@@ -85,7 +106,7 @@ async def get_user_embed(user_id: str, embed_type: str):
 
     else:
         try:
-            opts = options_parser.parse_args(request.args)
+            opts = EMBED_OPTS[embed_base_type].parse_args(request.args)
         except ValueError as e:
             return {"error": str(e)}, 400
 
@@ -101,7 +122,7 @@ async def get_user_embed(user_id: str, embed_type: str):
                 "error": "This instance does not allow renders with custom pfp/banner URLs"
             }
 
-        if "lastseen" not in opts["hide"]:
+        if opts["lastseen"]:
             last_seen_str = timeago.format(
                 datetime.datetime.fromisoformat(user["last_activity"]).replace(
                     tzinfo=datetime.timezone.utc
@@ -123,7 +144,8 @@ async def get_user_embed(user_id: str, embed_type: str):
         if filetype == "svg":
             resp = await make_response(svg)
             resp.headers.set("Content-Type", "image/svg+xml")
-            resp.headers.set("Cache-Control", f"maxage={CACHE_TIMEOUT}")
+            resp.cache_control.max_age = CACHE_TIMEOUT
+            resp.cache_control.public = True
             return resp
 
         elif filetype == "png":
@@ -134,7 +156,8 @@ async def get_user_embed(user_id: str, embed_type: str):
             png = await svg2png(bytes(svg, "utf-8"), render_filename)
             resp = await make_response(png)
             resp.headers.set("Content-Type", "image/png")
-            resp.headers.set("Cache-Control", f"maxage={CACHE_TIMEOUT}")
+            resp.cache_control.max_age = CACHE_TIMEOUT
+            resp.cache_control.public = True
             return resp
 
 
