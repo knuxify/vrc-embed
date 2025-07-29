@@ -77,7 +77,7 @@ class OptionsManager:
                 raise ValueError("bool type does not accept parameter")
 
         # url: URL-encoded URL to a file.
-        if ttype == "url":
+        elif ttype == "url":
             if tparam is not None:
                 raise ValueError("url type does not accept parameter")
 
@@ -114,6 +114,9 @@ class OptionsManager:
 
         ttype = tt[0]
         tparam = tt[1] if len(tt) == 2 else None
+
+        if not isinstance(value, str):
+            raise ValueError("Input value must be a string")
 
         if ttype == "str":
             return value
