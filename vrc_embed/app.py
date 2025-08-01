@@ -42,11 +42,11 @@ EMBEDS = {
 #: For an explanation of the type system, see OptionsManager in opts.py.
 COMMON_OPTS = {
     "inline_img": {"type": ("bool",), "default": "false"},
-    "pfp_url": {"type": ("url",)},
-    "banner_url": {"type": ("url",)},
+    "pfp_url": {"type": ("url",), "default": ""},
+    "banner_url": {"type": ("url",), "default": ""},
     "logo": {"type": ("enum", ["big", "small", "none"]), "default": "small"},
-    "background_color": {"type": ("str",)},
-    "foreground_color": {"type": ("str",)},
+    "background_color": {"type": ("color",), "default": "181B1F"},
+    "foreground_color": {"type": ("color",), "default": "F8F9FA"},
     "ingame_only": {"type": ("bool",), "default": "false"},
 }
 
@@ -57,21 +57,21 @@ EMBED_OPTS = {
             "type": ("enum", ["topleft", "datatop", "databottom"]),
             "default": "datatop",
         },
-        "width": { "type": ("int",), "default": "355" },
+        "width": { "type": ("int", {"min": 1, "max": 2000}), "default": "355" },
 
         "pfp": {"type": ("bool",), "default": "true"},
         "lastseen": {"type": ("bool",), "default": "true"},
         "pronouns": {"type": ("bool",), "default": "true"},
     }),
     "small": OptionsManager(COMMON_OPTS | {
-        "width": { "type": ("int",), "default": "250" },
+        "width": { "type": ("int", {"min": 1, "max": 2000}), "default": "250" },
 
         "pfp": {"type": ("bool",), "default": "true"},
         "lastseen": {"type": ("bool",), "default": "true"},
         "pronouns": {"type": ("bool",), "default": "true"},
     }),
     "tiny": OptionsManager(COMMON_OPTS | {
-        "width": { "type": ("int",), "default": "250" },
+        "width": { "type": ("int", {"min": 1, "max": 2000}), "default": "250" },
 
         "pfp": {"type": ("bool",), "default": "true"},
         "lastseen": {"type": ("bool",), "default": "false"},
@@ -81,6 +81,8 @@ EMBED_OPTS = {
     "button-static": OptionsManager(COMMON_OPTS),
 }  # fmt: skip
 
+#: Defaults for all options, passed to the web UI.
+OPT_DEFAULTS = dict((t, EMBED_OPTS[t].get_defaults()) for t in EMBED_OPTS.keys())
 
 @app.route("/<user_id>/<embed_type>")
 async def get_user_embed(user_id: str, embed_type: str):
@@ -172,4 +174,8 @@ async def favicon():
 @app.route("/")
 async def index():
     """Index page with configurator."""
-    return await render_template("index.html")
+    return await render_template(
+        "index.html",
+        allow_custom_url=not config["general"].get("block_custom_pfp_and_banner", False),
+        opt_defaults=OPT_DEFAULTS,
+    )

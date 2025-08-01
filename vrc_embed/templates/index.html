@@ -8,32 +8,461 @@
     <title>vrc-embed</title>
 
     <style>
-        :root { color-scheme: dark; }
-        body { background: #0E1013; color: #E6E7E8; font-family: 'Noto Sans', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; line-height: 1.75; text-align: justify; }
-
+        :root { color-scheme: dark; 	--error-background: #472e2b; --error-foreground: #fcddd9; }
+        * { box-sizing: border-box; scrollbar-color: #424447 transparent; }
+        body { background: #0E1013; color: #E6E7E8; font-family: 'Noto Sans', sans-serif; line-height: 1.75; text-align: justify; margin: 0; }
         h1 { text-shadow: 0 2px 2px #1E2A31; text-align: center; }
+        h2 { margin: 0; font-size: 1.15em; }
+        .subtitle { font-size: 0.875em; opacity: 0.7; margin: 0; margin-top: -6px; text-align: left; line-height: 1.5em; }
+        .padding { max-width: 600px; margin: 0 auto; padding: 20px; padding-bottom: 0; }
+        .configurator { background-color: rgba(0, 0, 0, 0.25); display: flex; flex-wrap: wrap;  justify-content: center; position: relative; gap: 20px; padding: 20px; }
+        .configurator #noscript { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); padding: 20px; font-size: 1.5em; z-index: 999; display: flex; align-items: center; justify-content: center; }
+        .configurator #settings { width: 400px; max-width: 400px; }
+        .configurator #preview-pane { min-width: 400px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        #preview { transition: filter 0.25s; filter: grayscale(0) brightness(1); }
+        #preview.inconsistent { filter: grayscale(1) brightness(0.6); }
+        hr { width: 100%; opacity: 0.2; }
+        pre { background: rgba(0, 0, 0, 0.25); border-radius: 8px; border: 1px solid #242629;  padding: 5px; margin: 6px 0; }
+
+        .list-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-wrapper {
+            background-color: #15171A;
+            border: 1px solid #242629;
+            transition: border-color .2s ease;
+            border-radius: 8px;
+            width: 100%;
+            position: relative;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: rgb(7, 36, 43);
+        }
+
+        .input-wrapper:not(:has(input[type="checkbox"])):not(:has(input[type="color"])) label {
+            font-size: 0.65rem;
+            position: absolute;
+            top: 0.15em; left: 0.75em;
+            opacity: 0.5;
+            pointer: cursor;
+            transition: top 0.15s, left 0.15s, font-size 0.15s;
+        }
+
+        .input-wrapper:has(input[type="checkbox"]) label,
+        .input-wrapper:has(input[type="color"]) label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            width: 100%;
+            display: inline-block;
+            margin-left: 0.35em;
+            pointer: cursor;
+            transition: top 0.15s, left 0.15s, font-size 0.15s;
+        }
+
+        .input-wrapper input[type="checkbox"] {
+            font-size: 1.2rem;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 18px;
+            height: 18px;
+            margin: 0.25em;
+        }
+
+        .input-wrapper input[type="color"] {
+            font-size: 1.2rem;
+            padding: 0;
+            outline: none;
+            border-radius: 0;
+            border: 1px solid #242629;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 32px;
+            height: 18px;
+            margin: 0.25em;
+        }
+
+        .input-wrapper:has(input:placeholder-shown):not(:focus-within) label {
+            font-size: 0.95rem !important;
+            top: 0.4rem !important;
+            left: 0.5em !important;
+        }
+
+        input:not([type="submit"]), select, textarea {
+            background: transparent;
+            color: inherit;
+            border: none;
+            font-size: 0.95rem;
+            font-family: inherit;
+            text-transform: none;
+            padding: 0.25em 0.5em;
+            padding-top: 1em;
+            border-radius: 8px;
+            transition: filter 0.15s;
+            filter: brightness(1);
+        }
+
+        textarea { width: 100%; min-width: 100%; max-width: 100%; max-height: 800px; min-width: 5rem; min-height: 1.875rem; }
+
+        input, select {
+            width: 100%;
+            max-width: 35rem;
+            display: block;
+        }
+
+        input:not([type="submit"]):hover, select:hover, textarea:hover {
+            filter: brightness(1.6);
+        }
+
+        input:not([type="submit"]):focus, select:focus, textarea:focus {
+            filter: brightness(1.1);
+            outline: 2px rgba(158, 186, 193, 0.17) solid;
+            outline-offset: 1px;
+        }
+
+        input:not([type="submit"]):disabled, select:disabled, textarea:disabled {
+            filter: brightness(0.75);
+            cursor: default;
+        }
+
+        .input-wrapper:has(input:not([type="submit"]).error),
+        .input-wrapper:has(input:focus:required:invalid) {
+            background-color: var(--error-background);
+            color: var(--error-foreground);
+        }
     </style>
 </head>
 <body>
-    <h1><img src="https://assets.vrchat.com/www/brand/vrchat-logo-white-transparent-crop-background.png" style="max-width: 110px; vertical-align: middle;"> Profile Widgets</h1>
-    <p style="opacity: 0.85;">Do you want to show your current status on VRChat on your website? This unofficial service allows you to generate an SVG or PNG image to put wherever you'd like, showing your VRChat profile details and status information.</p>
+    <div class="padding">
+        <h1><img src="https://assets.vrchat.com/www/brand/vrchat-logo-white-transparent-crop-background.png" style="max-width: 110px; vertical-align: middle;"> Profile Widgets</h1>
 
-    <h2>Configurator</h2>
-    <p>TODO</p>
+        <p style="opacity: 0.85;">Do you want to show your current status on VRChat on your website? This unofficial service allows you to generate an SVG or PNG image to put wherever you'd like, showing your VRChat profile details and status information.</p>
+    </div>
 
-    <object type="image/svg+xml" data="/usr_2c591b12-5e38-4b29-9b78-ffb75cbdfef4/large.svg" width="355" height="340" title="My VRChat status" style="color-scheme: light;"><img src="/usr_2c591b12-5e38-4b29-9b78-ffb75cbdfef4/large.png" width="355" height="340" title="My VRChat status"/></object>
+    <div class="configurator">
+        <noscript><div id="noscript">JavaScript must be enabled to use the configurator.</div></noscript>
 
-    <object type="image/svg+xml" data="/usr_2c591b12-5e38-4b29-9b78-ffb75cbdfef4/small.svg" width="250" height="150" title="My VRChat status" style="color-scheme: light;"><img src="/usr_2c591b12-5e38-4b29-9b78-ffb75cbdfef4/small.png" width="250" height="150" title="My VRChat status"/></object>
+        <div id="settings">
+            <div class="list-box">
+                <h2>Configurator</h2>
+                <p class="subtitle">To get your user ID, open the <a href="https://vrchat.com/home">VRChat website</a>, navigate to your profile, then copy the "usr_..." part of the URL.</p>
 
-    <object type="image/svg+xml" data="/usr_2c591b12-5e38-4b29-9b78-ffb75cbdfef4/tiny.svg" width="250" height="70" title="My VRChat status" style="color-scheme: light;"><img src="/usr_2c591b12-5e38-4b29-9b78-ffb75cbdfef4/tiny.png" width="250" height="70" title="My VRChat status"/></object>
-
-    <object type="image/svg+xml" data="/usr_113d7ac5-06c1-43ce-895d-5c95d20d8baa/large.svg?hide=pronouns" width="355" height="340" title="My VRChat status" style="color-scheme: light;"><img src="/usr_113d7ac5-06c1-43ce-895d-5c95d20d8baa/large.png?hide=pronouns" width="355" height="340" title="My VRChat status"/></object>
-
-    <object type="image/svg+xml" data="/usr_113d7ac5-06c1-43ce-895d-5c95d20d8baa/small.svg?hide=pronouns" width="250" height="150" title="My VRChat status" style="color-scheme: light;"><img src="/usr_113d7ac5-06c1-43ce-895d-5c95d20d8baa/small.png?hide=pronouns" width="250" height="150" title="My VRChat status"/></object>
-
-    <object type="image/svg+xml" data="/usr_113d7ac5-06c1-43ce-895d-5c95d20d8baa/tiny.svg?hide=pronouns" width="250" height="70" title="My VRChat status" style="color-scheme: light;"><img src="/usr_113d7ac5-06c1-43ce-895d-5c95d20d8baa/tiny.png?hide=pronouns" width="250" height="70" title="My VRChat status"/></object>
+                <div class="input-wrapper">
+                    <label for="uid">User ID</label>
+                    <input id="uid" placeholder=""/>
+                </div>
 
 
-    <p style="text-align: center; opacity: 0.75; filter: grayscale(1);"><small>This service is not affiliated with VRChat or VRChat Inc.; VRChat is a registered trademark of VRChat Inc.<br><a href="https://github.com/knuxify/vrc-embed">Source code</a></small></p>
+                <div class="input-wrapper">
+                    <label for="embed_type">Widget type</label>
+                    <select id="embed_type" value="large">
+                        <option value="large">Large</option>
+                        <option value="small">Small</option>
+                        <option value="tiny">Tiny</option>
+                    </select>
+                </div>
+
+                <div class="input-wrapper">
+                    <label for="width">Width</label>
+                    <input id="width" inputmode="numeric" type="number" min="1" max="2000" placeholder="" value="350"/>
+                </div>
+
+                <hr>
+
+                <div class="input-wrapper">
+                    <label for="pfp">Show profile picture</label>
+                    <input type="checkbox" id="pfp" name="pfp" checked/>
+                </div>
+
+                <div class="input-wrapper">
+                    <label for="lastseen">Show "last seen" label</label>
+                    <input type="checkbox" id="lastseen" name="lastseen" checked/>
+                </div>
+
+                <div class="input-wrapper">
+                    <label for="pronouns">Show pronouns</label>
+                    <input type="checkbox" id="pronouns" name="pronouns" checked/>
+                </div>
+
+                <div class="input-wrapper">
+                    <label for="ingame_only">Only display in-game status <small>(not "Active on website")</small></label>
+                    <input type="checkbox" id="ingame_only" name="ingame_only"/>
+                </div>
+
+                <hr>
+
+                <div class="input-wrapper">
+                    <label for="logo">Logo type</label>
+                    <select id="logo" value="small">
+                        <option value="big">Big</option>
+                        <option value="small">Small</option>
+                        <option value="none">No logo</option>
+                    </select>
+                </div>
+
+                <div class="input-wrapper" id="logo-position-wrapper">
+                    <label for="logo_position">Logo position</label>
+                    <select id="logo_position" value="datatop">
+                        <option value="topleft">Top left</option>
+                        <option value="datatop">Top of username/status box</option>
+                        <option value="databottom">Bottom of username/status box</option>
+                    </select>
+                </div>
+
+                <hr>
+
+                <div class="input-wrapper">
+                    <label for="foreground_color">Foreground color</label>
+                    <input id="foreground_color" type="color" value="#F8F9FA"/>
+                </div>
+
+                <div class="input-wrapper">
+                    <label for="background_color">Background color</label>
+                    <input id="background_color" type="color" value="#181B1F"/>
+                </div>
+                {% if allow_custom_url %}
+                <hr>
+
+                <div class="input-wrapper">
+                    <label for="pfp_url">Custom profile picture URL</label>
+                    <input id="pfp_url" inputmode="url" placeholder=""/>
+                </div>
+
+                <div class="input-wrapper">
+                    <label for="banner_url">Custom banner URL</label>
+                    <input id="banner_url" inputmode="url" placeholder=""/>
+                </div>
+                {% endif %}
+
+
+            </div>
+        </div>
+
+        {# note that the preview code is indented weirdly. this is on purpose - we copy the inner HTML of the preview element into the "embed code" field, and keeping proper indentation here breaks the spacing. #}
+        <div id="preview-pane">
+            <div id="preview-no-uid" style="opacity: 0.65;">Please enter your User ID.</div>
+            <div id="preview-error"></div>
+            <div id="preview">
+<object id="preview-svg" type="image/svg+xml" data="" width="355" height="340" title="My VRChat status" style="color-scheme: light;">
+    <img id="preview-png" src="" width="355" height="340" title="My VRChat status"/>
+</object>
+            </div>
+        </div>
+    </div>
+
+    <div class="padding">
+        <h2 style="text-align: center;">Embed Code</h2>
+
+        <pre style="text-align: left; text-wrap: wrap; word-break: break-word;"><code class="lang-html" id="code">&lt;!-- Please wait... --&gt;</code></pre>
+
+        <h2 style="text-align: center;">Image URLs</h2>
+
+        <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 6px; margin-top: 6px;"><span style="font-size: 0.8em; opacity: 0.8; font-weight: bold; line-height: 1; display: block; width: 28px; flex-shrink: 0;">SVG</span><pre id="svg-url" style="margin: 0; width: 100%; overflow-x: scroll;">Please wait...</pre></div>
+        <div style="display: flex; gap: 6px; align-items: center;"><span style="font-size: 0.8em; opacity: 0.8; font-weight: bold; line-height: 1; display: block; width: 28px; flex-shrink: 0;">PNG</span><pre id="png-url" style="margin: 0; width: 100%; overflow-x: scroll;">Please wait...</pre></div>
+    </div>
+
+    <p style="text-align: center; opacity: 0.75; filter: grayscale(1); padding: 0 20px;"><small>This service is not affiliated with VRChat or VRChat Inc.; VRChat is a registered trademark of VRChat Inc.<br><a href="https://github.com/knuxify/vrc-embed">Source code</a></small></p>
+
+    <script>
+        const props = ["uid", "embed_type", "width", "pfp", "lastseen", "pronouns", "logo", "logo_position", "ingame_only"{% if allow_custom_url%}, "pfp_url", "banner_url"{% endif %}, "foreground_color", "background_color"];
+        const defaults = JSON.parse('{{ opt_defaults | tojson }}');
+        var widths = {"large": 350, "small": 250, "tiny": 250};
+        var last_opts = null;
+        var update_timeout = null;
+        var ignore_change = false;
+
+        function getOpts(skip_defaults = true) {
+            let out = {};
+            const embed_type = document.getElementById("embed_type").value;
+            props.forEach((prop) => {
+                if (prop == "logo_position" && embed_type != "large")
+                    return;
+
+                let el = document.getElementById(prop);
+
+                if (el.type == "checkbox")
+                    out[prop] = el.checked ? "true" : "false";
+                else if (el.type == "color")
+                    out[prop] = el.value.slice(1);
+                else
+                    out[prop] = el.value;
+
+                if (skip_defaults) {
+                    if (prop != "uid" && prop != "embed_type" && out[prop] == defaults[embed_type][prop])
+                        delete out[prop];
+                }
+            });
+            return out;
+        }
+
+        function generateLink(opts, filetype) {
+            _opts = {...opts}
+
+            uid = _opts["uid"];
+            delete _opts["uid"];
+
+            embed_type = _opts["embed_type"];
+            delete _opts["embed_type"];
+
+            var params = new URLSearchParams(_opts);
+
+            var url = new URL(`/${uid}/${embed_type}.${filetype}?${params}`, window.location.origin);
+            return `${url}`
+        }
+
+        function getWidth(embed_type, opts) {
+            return opts["width"] || parseInt(defaults[embed_type]["width"])
+        }
+
+        function getHeight(embed_type, opts) {
+            if (embed_type == "large") {
+                if (opts["pronouns"] == false || (opts["pronouns"] == undefined && (defaults[embed_type]["pronouns"] == "true" ? true : false)))
+                    return 340
+                return 322
+            } else if (embed_type == "small") {
+                return 150
+            } else if (embed_type == "tiny") {
+                return 80
+            }
+            return 0
+        }
+
+        function escapeHTML(input) {
+            /* Technically this isn't a *full* HTML escape, but it's just enough
+               to turn HTML into something we can put into a <code> block... */
+            return input.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+        }
+
+        function uidValid(input) {
+            // New-style ID
+            if (input.match("^usr_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"))
+                return true;
+
+            // Old-style ID
+            if (input.match("^[A-Za-z0-9]{10}$"))
+                return true;
+
+            return false;
+        }
+
+        async function updateRender() {
+            let preview = document.getElementById("preview");
+            let preview_svg = document.getElementById("preview-svg");
+            let preview_png = document.getElementById("preview-png");
+
+            preview.classList.remove("inconsistent");
+            update_timeout = null;
+
+            const opts = getOpts();
+
+            if (!uidValid(opts["uid"])) {
+                preview.style.display = "none";
+                document.getElementById("preview-no-uid").style.display = "block";                document.getElementById("preview-error").style.display = "none";
+                document.getElementById("code").innerHTML = "...";
+                document.getElementById("svg-url").innerHTML = "...";
+                document.getElementById("png-url").innerHTML = "...";
+                return;
+            } else {
+                preview.style.display = "block";
+                document.getElementById("preview-no-uid").style.display = "none";
+                document.getElementById("preview-error").style.display = "none";
+            }
+
+            let svg_link = generateLink(opts, "svg");
+            let png_link = generateLink(opts, "png")
+
+            // Get SVG manually first to see errors
+            try {
+                const response = await fetch(svg_link);
+                if (!response.ok) {
+                    if (response.status == 400) {
+                        const json = await response.json();
+                        throw new Error(json["error"]);
+                    } else if (response.status == 404) {
+                        throw new Error("User with given ID not found");
+                    } else {
+                        throw new Error(`Failed to connect to backend: ${response.status}`);
+                    }
+                }
+            } catch (error) {
+                preview.style.display = "none";
+                document.getElementById("preview-error").style.display = "block";
+                document.getElementById("preview-error").innerHTML = escapeHTML(error.message);
+
+            }
+
+            preview_svg.data = svg_link;
+            preview_svg.width = getWidth(embed_type, opts);
+            preview_svg.height = getHeight(embed_type, opts);
+
+            preview_png.src = png_link;
+            preview_png.width = getWidth(embed_type, opts);
+            preview_png.height = getHeight(embed_type, opts);
+
+            document.getElementById("code").innerHTML = escapeHTML(preview.innerHTML).trim();
+            document.getElementById("svg-url").innerHTML = svg_link;
+            document.getElementById("png-url").innerHTML = png_link;
+        }
+
+        function entryValidation() {
+            const opts = getOpts(false);
+            if (last_opts != null) {
+                if (opts["embed_type"] != last_opts["embed_type"]) {
+                    ignore_change = true;
+                    document.getElementById("width").value = widths[opts["embed_type"]].toString();
+                    ignore_change = false;
+                }
+            }
+            last_opts = {...opts};
+
+            if (!uidValid(opts["uid"]))
+                document.getElementById("uid").classList.add("error");
+            else
+                document.getElementById("uid").classList.remove("error");
+
+            try {
+            console.log(opts);
+                let width_int = parseInt(document.getElementById("width").value);
+                if (isNaN(width_int) || width_int < 1 || width_int > 2000) {
+                    document.getElementById("width").classList.add("error");
+                } else {
+                    document.getElementById("width").classList.remove("error");
+                    widths[opts["embed_type"]] = width_int;
+                }
+            } catch (error) {
+                console.log(error);
+                document.getElementById("width").classList.add("error");
+            }
+
+            if (opts["embed_type"] == "large")
+                document.getElementById("logo-position-wrapper").style.display = "block";
+            else
+                document.getElementById("logo-position-wrapper").style.display = "none";
+        }
+
+        function queueUpdateRender() {
+            if (ignore_change)
+                return;
+
+            if (update_timeout != null)
+                window.clearTimeout(update_timeout);
+            else
+                document.getElementById("preview").classList.add("inconsistent");
+
+            update_timeout = window.setTimeout(updateRender, 650);
+
+            entryValidation();
+        }
+
+        props.forEach((x) => document.getElementById(x).addEventListener("input", (event) => { queueUpdateRender(); }));
+
+        updateRender();
+        entryValidation();
+    </script>
 </body>
 </html>

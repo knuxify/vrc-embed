@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Parser for custom options based on request arguments."""
 
+import re
 from typing import Optional
 
 from werkzeug.datastructures.structures import ImmutableMultiDict
@@ -32,6 +33,13 @@ class OptionsManager:
 
         self.options = options
 
+    def get_defaults(self) -> dict:
+        """Get the defaults for all options."""
+        out = {}
+        for opt, data in self.options.items():
+            out[opt] = data.get("default", None)
+        return out
+
     def parse_args(self, args: ImmutableMultiDict) -> dict:
         """Parse request.args into options."""
         for arg in args.keys():
@@ -53,7 +61,7 @@ class OptionsManager:
         return out
 
     @classmethod
-    def type_tuple_is_valid(cls, tt: tuple):
+    def type_tuple_is_valid(cls, tt: tuple) -> bool:
         """Check whether a type tuple is valid. Returns True if so, raises ValueError otherwise."""
         if not isinstance(tt, tuple):
             raise ValueError("Type tuple must be a tuple")
@@ -72,8 +80,16 @@ class OptionsManager:
 
         # int: Basic integer parameter.
         elif ttype == "int":
-            if tparam is not None:
-                raise ValueError("int type does not accept parameter")
+            if tparam is None:
+                return True
+
+            elif isinstance(tparam, dict):
+                for key in tparam.keys():
+                    if key != "min" and key != "max":
+                        raise ValueError(f"Invalid key {key} for int type value")
+
+            else:
+                raise ValueError("int parameter must be None or dict")
 
         #: bool: Boolean parameter; accepts values of "true" or "false".
         elif ttype == "bool":
@@ -84,6 +100,11 @@ class OptionsManager:
         elif ttype == "url":
             if tparam is not None:
                 raise ValueError("url type does not accept parameter")
+
+        # color: Hex color without # prefix.
+        elif ttype == "color":
+            if tparam is not None:
+                raise ValueError("color type does not accept parameter")
 
         # enum: Enumerator of possible string values.
         elif ttype == "enum":
@@ -108,6 +129,8 @@ class OptionsManager:
         else:
             raise ValueError(f'Unknown type "{ttype}"')
 
+        return True
+
     @classmethod
     def value_from_type_tuple(cls, value: str, tt: tuple) -> object:
         """
@@ -127,9 +150,18 @@ class OptionsManager:
 
         elif ttype == "int":
             try:
-                return int(value)
+                val_int = int(value)
             except ValueError as e:
                 raise ValueError(f"Invalid integer: {value}") from e
+
+            if tparam:
+                if "min" in tparam and val_int < tparam["min"]:
+                    raise ValueError(f"Value is lower than minimum ({tparam['min']})")
+
+                if "max" in tparam and val_int > tparam["max"]:
+                    raise ValueError(f"Value is higher than maximum ({tparam['max']})")
+
+            return val_int
 
         elif ttype == "bool":
             if value.lower() == "true":
@@ -140,6 +172,14 @@ class OptionsManager:
 
         elif ttype == "url":
             return value
+
+        elif ttype == "color":
+            if value and not re.match("[0-9a-fA-F]{3}", value) and not re.match("[0-9a-fA-F]{6}", value):
+                raise ValueError("Color value must be hex color without transparency and without # prefix")
+            if len(value) == 3:
+                return f"#{value[0]*2}{value[1]*2}{value[2]*2}"
+            elif len(value) == 6:
+                return f"#{value}"
 
         elif ttype == "enum":
             if value not in tparam:
