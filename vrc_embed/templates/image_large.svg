@@ -61,11 +61,13 @@
      {%- if opts.logo == "big" -%}{% set logo_w = 100 %}{% set logo_h = 40 %}
      {%- elif opts.logo == "small" -%}{% set logo_w = 40 %}{% set logo_h = 40 %}
      {%- endif -%}
-     {%- if opts.logo_position == "topleft" -%}{% set logo_x = 12 %}{% set logo_y = 12 %}
-     {%- elif opts.logo_position == "datatop" -%}{% set logo_x = opts.width - logo_w - 20 %}{% set logo_y = 229.5 %}
-     {%- elif opts.logo_position == "databottom" -%}{% set logo_x = opts.width - logo_w - 20 %}{% set logo_y = img_height - logo_h - 5.5 %}
-     {%- endif -%}
-     {%- if opts.logo == "big" -%}{{ image_common.vrc_logo_big(logo_x, logo_y, logo_w, logo_h) }}
-     {%- elif opts.logo == "small" -%}{{ image_common.vrc_logo_small(logo_x, logo_y, logo_w, logo_h) }}
-     {%- endif -%}
+     {% if opts.logo == "big" or opts.logo == "small" %}
+          {%- if opts.logo_position == "topleft" -%}{% set logo_x = 12 %}{% set logo_y = 12 %}
+          {%- elif opts.logo_position == "datatop" -%}{% set logo_x = opts.width - logo_w - 20 %}{% set logo_y = 229.5 %}
+          {%- elif opts.logo_position == "databottom" -%}{% set logo_x = opts.width - logo_w - 20 %}{% set logo_y = img_height - logo_h - 5.5 %}
+          {%- endif -%}
+          {%- if opts.logo == "big" -%}{{ image_common.vrc_logo_big(logo_x, logo_y, logo_w, logo_h) }}
+          {%- elif opts.logo == "small" -%}{{ image_common.vrc_logo_small(logo_x, logo_y, logo_w, logo_h) }}
+          {%- endif -%}
+     {% endif %}
 </svg>
