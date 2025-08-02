@@ -135,6 +135,86 @@
             background-color: var(--error-background);
             color: var(--error-foreground);
         }
+
+        button, .button {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+
+            color: #E6E7E8;
+            background-color: #15171A;
+            border: 1px solid #242629;
+            border-radius: 8px;
+
+            font-size: 0.95rem;
+            font-family: inherit;
+            text-transform: none;
+            text-decoration: none;
+            padding: 0.5em 0.725em;
+
+            backdrop-filter: brightness(1);
+            transition: filter 0.15s, backdrop-filter 0.15s, color 0.25s;
+
+            font-weight: 600;
+
+            line-height: 1.15;
+            text-align: center;
+        }
+
+        button { -webkit-appearance: button; }
+
+        .button {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        button:hover, .button:hover {
+            filter: brightness(1.1);
+        }
+
+        button:focus, .button:focus {
+            filter: brightness(1.1);
+            outline: 2px rgba(var(--accent-color-foreground-rgb), 0.5) solid;
+            outline-offset: 1px;
+        }
+
+        button:active, .button:active {
+            filter: brightness(1.3);
+            backdrop-filter: brightness(1.3); /* for flat buttons */
+        }
+
+        button:disabled, .button.disabled {
+            filter: brightness(0.75);
+            cursor: default;
+        }
+
+        @keyframes button-activated {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        button.activated, .button.activated {
+            color: transparent;
+        }
+
+        button.activated:after, .button.activated:after {
+            color: #E6E7E8;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #41514479;
+            border-radius: 8px;
+            content: "Copied!";
+            animation-name: button-activated;
+            animation-duration: 1.5s;
+            display: flex; align-items: center; justify-content: center; text-align: center;
+        }
+
     </style>
 </head>
 <body>
@@ -156,7 +236,6 @@
                     <label for="uid">User ID</label>
                     <input id="uid" placeholder=""/>
                 </div>
-
 
                 <div class="input-wrapper">
                     <label for="embed_type">Widget type</label>
@@ -198,18 +277,18 @@
 
                 <div class="input-wrapper">
                     <label for="logo">Logo type</label>
-                    <select id="logo" value="small">
+                    <select id="logo">
                         <option value="big">Big</option>
-                        <option value="small">Small</option>
+                        <option value="small" selected>Small</option>
                         <option value="none">No logo</option>
                     </select>
                 </div>
 
                 <div class="input-wrapper" id="logo-position-wrapper">
                     <label for="logo_position">Logo position</label>
-                    <select id="logo_position" value="datatop">
+                    <select id="logo_position">
                         <option value="topleft">Top left</option>
-                        <option value="datatop">Top of username/status box</option>
+                        <option value="datatop" selected>Top of username/status box</option>
                         <option value="databottom">Bottom of username/status box</option>
                     </select>
                 </div>
@@ -243,14 +322,13 @@
             </div>
         </div>
 
-        {# note that the preview code is indented weirdly. this is on purpose - we copy the inner HTML of the preview element into the "embed code" field, and keeping proper indentation here breaks the spacing. #}
         <div id="preview-pane">
             <div id="preview-no-uid" style="opacity: 0.65;">Please enter your User ID.</div>
             <div id="preview-error"></div>
             <div id="preview">
-<object id="preview-svg" type="image/svg+xml" data="" width="355" height="340" title="My VRChat status" style="color-scheme: light;">
-    <img id="preview-png" src="" width="355" height="340" title="My VRChat status"/>
-</object>
+                <object id="preview-svg" type="image/svg+xml" data="" width="355" height="340" title="My VRChat status" style="color-scheme: light;">
+                    <img id="preview-png" src="" width="355" height="340" title="My VRChat status"/>
+                </object>
             </div>
         </div>
     </div>
@@ -259,11 +337,20 @@
         <h2 style="text-align: center;">Embed Code</h2>
 
         <pre style="text-align: left; text-wrap: wrap; word-break: break-word;"><code class="lang-html" id="code">&lt;!-- Please wait... --&gt;</code></pre>
+        <button style="display: block; width: 100%; margin-bottom: 12px;" onclick="copyToClipboard(this, generateEmbedCode(getOpts()))">Copy code to clipboard</button>
 
         <h2 style="text-align: center;">Image URLs</h2>
 
-        <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 6px; margin-top: 6px;"><span style="font-size: 0.8em; opacity: 0.8; font-weight: bold; line-height: 1; display: block; width: 28px; flex-shrink: 0;">SVG</span><pre id="svg-url" style="margin: 0; width: 100%; overflow-x: scroll;">Please wait...</pre></div>
-        <div style="display: flex; gap: 6px; align-items: center;"><span style="font-size: 0.8em; opacity: 0.8; font-weight: bold; line-height: 1; display: block; width: 28px; flex-shrink: 0;">PNG</span><pre id="png-url" style="margin: 0; width: 100%; overflow-x: scroll;">Please wait...</pre></div>
+        <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 6px; margin-top: 6px;">
+            <span style="font-size: 0.8em; opacity: 0.8; font-weight: bold; line-height: 1; display: block; width: 28px; flex-shrink: 0;">SVG</span>
+            <pre id="svg-url" style="margin: 0; width: 100%; overflow-x: scroll;">Please wait...</pre>
+            <button onclick="copyToClipboard(this, generateLink(getOpts(), 'svg'))">Copy</button>
+        </div>
+        <div style="display: flex; gap: 6px; align-items: center;">
+            <span style="font-size: 0.8em; opacity: 0.8; font-weight: bold; line-height: 1; display: block; width: 28px; flex-shrink: 0;">PNG</span>
+            <pre id="png-url" style="margin: 0; width: 100%; overflow-x: scroll;">Please wait...</pre>
+            <button onclick="copyToClipboard(this, generateLink(getOpts(), 'png'))">Copy</button>
+        </div>
     </div>
 
     <p style="text-align: center; opacity: 0.75; filter: grayscale(1); padding: 0 20px;"><small>This service is not affiliated with VRChat or VRChat Inc.; VRChat is a registered trademark of VRChat Inc.<br><a href="https://github.com/knuxify/vrc-embed">Source code</a></small></p>
@@ -288,7 +375,7 @@
                 if (el.type == "checkbox")
                     out[prop] = el.checked ? "true" : "false";
                 else if (el.type == "color")
-                    out[prop] = el.value.slice(1);
+                    out[prop] = el.value.slice(1).toUpperCase();
                 else
                     out[prop] = el.value;
 
@@ -313,6 +400,13 @@
 
             var url = new URL(`/${uid}/${embed_type}.${filetype}?${params}`, window.location.origin);
             return `${url}`
+        }
+
+        function generateEmbedCode(opts) {
+
+            return `<object type="image/svg+xml" data="${generateLink(opts, 'svg')}" width="${getWidth(opts["embed_type"], opts)}" height="${getWidth(opts["embed_type"], opts)}" title="My VRChat status" style="color-scheme: light;">
+    <img src="${generateLink(opts, 'png')}" width="${getWidth(opts["embed_type"], opts)}" height="${getWidth(opts["embed_type"], opts)}" title="My VRChat status"/>
+</object>`
         }
 
         function getWidth(embed_type, opts) {
@@ -362,7 +456,8 @@
 
             if (!uidValid(opts["uid"])) {
                 preview.style.display = "none";
-                document.getElementById("preview-no-uid").style.display = "block";                document.getElementById("preview-error").style.display = "none";
+                document.getElementById("preview-no-uid").style.display = "block";
+                document.getElementById("preview-error").style.display = "none";
                 document.getElementById("code").innerHTML = "...";
                 document.getElementById("svg-url").innerHTML = "...";
                 document.getElementById("png-url").innerHTML = "...";
@@ -396,15 +491,17 @@
 
             }
 
+            preview.style.height = getHeight(opts["embed_type"], opts);
+
             preview_svg.data = svg_link;
-            preview_svg.width = getWidth(embed_type, opts);
-            preview_svg.height = getHeight(embed_type, opts);
+            preview_svg.width = getWidth(opts["embed_type"], opts);
+            preview_svg.height = getHeight(opts["embed_type"], opts);
 
             preview_png.src = png_link;
-            preview_png.width = getWidth(embed_type, opts);
-            preview_png.height = getHeight(embed_type, opts);
+            preview_png.width = getWidth(opts["embed_type"], opts);
+            preview_png.height = getHeight(opts["embed_type"], opts);
 
-            document.getElementById("code").innerHTML = escapeHTML(preview.innerHTML).trim();
+            document.getElementById("code").innerHTML = escapeHTML(generateEmbedCode(opts));
             document.getElementById("svg-url").innerHTML = svg_link;
             document.getElementById("png-url").innerHTML = png_link;
         }
@@ -457,6 +554,13 @@
             update_timeout = window.setTimeout(updateRender, 650);
 
             entryValidation();
+        }
+
+        function copyToClipboard(caller, text) {
+            navigator.clipboard.writeText(text);
+            caller.classList.remove("activated");
+            caller.classList.add("activated");
+            window.setTimeout(function() {caller.classList.remove("activated")}, 1500)
         }
 
         props.forEach((x) => document.getElementById(x).addEventListener("input", (event) => { queueUpdateRender(); }));
