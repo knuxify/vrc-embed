@@ -29,8 +29,4 @@ Setting up 2FA is highly recommended, as VRChat often asks for a code during aut
 
 ### Docker
 
-* Install Docker.
-* Copy `docker/config.toml.example` to `config.toml`. Adjust as needed.
-* Copy `docker/docker-compose.yml` to `docker-compose.yml`. Adjust as needed.
-
-TODO
+See `docker/README.md` for instructions.

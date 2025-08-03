@@ -1,0 +1,24 @@
+# Docker Compose file for running vrc-embed. **Please read docker/README.md first.**
+# (This file expects to be moved into the main vrc-embed source code directory!)
+
+services:
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+
+  vrc-embed:
+    image: vrc-embed:latest
+    build:
+      context: .
+      dockerfile: docker/vrc-embed/Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./config.toml:/opt/vrc-embed/config.toml
+      - renders:/opt/vrc-embed/renders
+    ports:
+      # host:container. You can change the host port if you need.
+      # This needs to be routed to a reverse proxy.
+      - "7878:7878"
+
+volumes:
+  renders:

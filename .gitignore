@@ -20,3 +20,5 @@ fonts/*.otf
 *.kate-swp
 
 renders/*.png
+
+docker-compose.yml
