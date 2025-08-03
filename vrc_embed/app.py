@@ -10,6 +10,7 @@ from quart_tasks import QuartTasks
 
 from . import config
 from .button import button_anim, button_static
+from .font import FONTS_PATH, text_width
 from .opts import OptionsManager
 from .render import (
     RENDERS_PATH,
@@ -19,7 +20,6 @@ from .render import (
     svg2png,
     svg_inline_images,
 )
-from .utils import text_width
 from .vrchat import CACHE_TIMEOUT, api_log_in, get_vrc_user
 
 app = Quart(__name__)
@@ -83,6 +83,7 @@ EMBED_OPTS = {
 
 #: Defaults for all options, passed to the web UI.
 OPT_DEFAULTS = dict((t, EMBED_OPTS[t].get_defaults()) for t in EMBED_OPTS.keys())
+
 
 @app.route("/<user_id>/<embed_type>")
 async def get_user_embed(user_id: str, embed_type: str):
@@ -176,6 +177,14 @@ async def index():
     """Index page with configurator."""
     return await render_template(
         "index.html",
-        allow_custom_url=not config["general"].get("block_custom_pfp_and_banner", False),
+        allow_custom_url=not config["general"].get(
+            "block_custom_pfp_and_banner", False
+        ),
         opt_defaults=OPT_DEFAULTS,
     )
+
+
+@app.route("/fonts/<font_name>")
+async def font(font_name):
+    """Serve a font as a TTF."""
+    return await send_from_directory(FONTS_PATH, font_name)

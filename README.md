@@ -23,6 +23,7 @@ Setting up 2FA is highly recommended, as VRChat often asks for a code during aut
   * For Python 3.10 and lower, install `toml` and `taskgroup`.
 * Copy `config.toml.example` to `config.toml`. Adjust as needed.
 * Download a copy of the Noto Sans Regular font and place it in `fonts/notosans.ttf`.
+* Download a copy of the Noto Sans Bold font and place it in `fonts/notosans-bold.ttf`.
 * Run with `./run-prod.sh`.
 
 **Note:** For development, you can use `poetry`. Run `poetry install` to fetch dependencies, then run with `poetry run ./run-dev.sh`.

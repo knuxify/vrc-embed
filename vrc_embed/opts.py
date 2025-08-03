@@ -174,10 +174,16 @@ class OptionsManager:
             return value
 
         elif ttype == "color":
-            if value and not re.match("[0-9a-fA-F]{3}", value) and not re.match("[0-9a-fA-F]{6}", value):
-                raise ValueError("Color value must be hex color without transparency and without # prefix")
+            if (
+                value
+                and not re.match("[0-9a-fA-F]{3}", value)
+                and not re.match("[0-9a-fA-F]{6}", value)
+            ):
+                raise ValueError(
+                    "Color value must be hex color without transparency and without # prefix"
+                )
             if len(value) == 3:
-                return f"#{value[0]*2}{value[1]*2}{value[2]*2}"
+                return f"#{value[0] * 2}{value[1] * 2}{value[2] * 2}"
             elif len(value) == 6:
                 return f"#{value}"
 

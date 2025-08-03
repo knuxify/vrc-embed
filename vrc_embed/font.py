@@ -5,13 +5,7 @@ import os.path
 
 from PIL import ImageFont
 
-from . import config
-
-
-def get_base_path():
-    """Get the vrc-embed base repo clone path."""
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+from . import config, get_base_path
 
 #: Loaded font cache for text_width().
 _font_cache = {}
@@ -19,10 +13,7 @@ _font_cache = {}
 #: Font name to font file mapping.
 FONTS = {"Noto Sans": "notosans.ttf"}
 
-FONTS_DIR = config.get("fonts", {}).get(
-    "path",
-    os.path.join(get_base_path(), "fonts"),
-)
+FONTS_PATH = config["general"].get("fonts_path", os.path.join(get_base_path(), "fonts"))
 
 
 def text_width(text: str, font_name: str, size: float) -> float:
@@ -41,7 +32,16 @@ def text_width(text: str, font_name: str, size: float) -> float:
     else:
         if font_name not in FONTS:
             raise ValueError(f"Font {font_name} not available")
-        font = ImageFont.truetype(os.path.join(FONTS_DIR, FONTS[font_name]), size=size)
+
+        font_path = os.path.join(FONTS_PATH, FONTS[font_name])
+
+        try:
+            font = ImageFont.truetype(font_path, size=size)
+        except OSError as e:
+            raise Exception(
+                f"Missing font file for {font_name}; tried to look in {font_path}"
+            ) from e
+
         _font_cache[font_key] = font
 
     return font.getlength(text)

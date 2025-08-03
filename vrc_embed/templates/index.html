@@ -8,7 +8,10 @@
     <title>vrc-embed</title>
 
     <style>
-        :root { color-scheme: dark; 	--error-background: #472e2b; --error-foreground: #fcddd9; }
+        @font-face { font-family: 'Noto Sans'; font-weight: 400; src: local('Noto Sans'), url('/fonts/notosans.ttf'); }
+        @font-face { font-family: 'Noto Sans'; font-weight: 700; src: local('Noto Sans'), url('/fonts/notosans-bold.ttf'); }
+
+        :root { color-scheme: dark; --error-background: #472e2b; --error-foreground: #fcddd9; }
         * { box-sizing: border-box; scrollbar-color: #424447 transparent; }
         body { background: #0E1013; color: #E6E7E8; font-family: 'Noto Sans', sans-serif; line-height: 1.75; text-align: justify; margin: 0; }
         h1 { text-shadow: 0 2px 2px #1E2A31; text-align: center; }

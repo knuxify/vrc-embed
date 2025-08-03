@@ -26,8 +26,7 @@ try:
 except AttributeError:
     from taskgroup import TaskGroup
 
-from . import config
-from .utils import get_base_path
+from . import config, get_base_path
 
 #: Base directory used for renders.
 RENDERS_PATH = config["general"].get(

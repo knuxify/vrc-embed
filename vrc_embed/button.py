@@ -10,5 +10,3 @@ def button_static(filetype: str, user: dict):
 def button_anim(filetype: str, user: dict):
     """Generate an animated 88x31 button."""
     raise NotImplementedError  # stub
-
-
