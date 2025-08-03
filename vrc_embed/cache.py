@@ -31,8 +31,6 @@ class Cache:
             decode_responses=False,
         )
 
-        print(self.cache.get("abcdef"))
-
     def _set(
         self, cache: redis.Redis, key: str, value: Union[str, bytes], timeout: int = 0
     ):
