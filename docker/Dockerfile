@@ -33,6 +33,7 @@ COPY . .
 RUN apk update
 RUN apk add imagemagick imagemagick-svg rsvg-convert font-noto shadow runuser
 RUN cp /usr/share/fonts/noto/NotoSans-Regular.ttf ./fonts/notosans.ttf
+RUN cp /usr/share/fonts/noto/NotoSans-Bold.ttf ./fonts/notosans-bold.ttf
 
 # Wand bug: it can't find the so.XX libraries, so manual
 # symlinks need to be made.
