@@ -2,7 +2,7 @@
 # NOTE: This file expects the build context to be set to the vrc-embed source code directory.
 
 ARG PYTHON_VERSION=3.12
-FROM python:${PYTHON_VERSION}-slim as base
+FROM python:${PYTHON_VERSION}-alpine as base
 
 # ...configurable args start here...
 
@@ -29,17 +29,19 @@ WORKDIR /opt/vrc-embed
 # Copy the source code into the container
 COPY . .
 
-# Download Noto Sans font
-ADD https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSans/unhinted/ttf/NotoSans-Regular.ttf ./fonts/notosans.ttf
+# Download ImageMagick, rsvg-convert and Noto fonts
+RUN apk update
+RUN apk add imagemagick imagemagick-svg rsvg-convert font-noto shadow runuser
+RUN cp /usr/share/fonts/noto/NotoSans-Regular.ttf ./fonts/notosans.ttf
 
-# Download ImageMagick and rsvg-convert
+# Wand bug: it can't find the so.XX libraries, so manual
+# symlinks need to be made.
+RUN ln -s /usr/lib/libMagickCore-7.Q16HDRI.so.*.* /usr/lib/libMagickCore-7.Q16HDRI.so
+RUN ln -s /usr/lib/libMagickWand-7.Q16HDRI.so.*.* /usr/lib/libMagickWand-7.Q16HDRI.so
 
-RUN apt update
-RUN apt install -y imagemagick librsvg2-bin
-
-# Install vrc-embed dependencies.
+# Install vrc-embed dependencies
 RUN --mount=type=cache,target=/root/.cache/pip \
-    python -m pip install . .[statstool]
+    python -m pip install .
 
 # Add vrc-embed user
 ARG UID=10001
