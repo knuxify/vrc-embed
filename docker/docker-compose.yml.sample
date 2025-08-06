@@ -10,7 +10,7 @@ services:
     image: vrc-embed:latest
     build:
       context: .
-      dockerfile: docker/vrc-embed/Dockerfile
+      dockerfile: docker/Dockerfile
     restart: unless-stopped
     volumes:
       - ./config.toml:/opt/vrc-embed/config.toml
