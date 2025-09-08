@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Fetching data from VRChat and caching."""
 
+import json
 import pickle
 from http.cookiejar import Cookie
 from typing import Tuple, Union
@@ -78,6 +79,11 @@ def api_log_in() -> bool:
         current_user = auth_api.get_current_user()
 
     except UnauthorizedException as e:
+        try:
+            json_body = json.loads(e.body)
+        except ValueError:
+            json_body = None
+
         if e.status == 200:
             if "Email 2 Factor Authentication" in e.reason:
                 auth_api.verify2_fa_email_code(
@@ -98,12 +104,51 @@ def api_log_in() -> bool:
                     )
 
             current_user = auth_api.get_current_user()
+
+        elif (
+            e.status == 401
+            and json_body
+            and "email"
+            in json_body.get("error", {"message": ""}).get("message", "").lower()
+        ):
+            # E-mail verification prompt
+            auth_api.verify_login_place(
+                token=input(
+                    "Open your e-mail and click on the verification link, or copy the token= field from the URL: "
+                ).strip(),
+                user_id=config["vrchat"]["userid"],
+            )
+            current_user = auth_api.get_current_user()
+
         else:
-            print("Exception when calling API: %s\n", e)
+            print("UnauthorizedException when calling API: %s\n", e, e.reason)
             return False
     except vrchatapi.ApiException as e:
-        print("Exception when calling API: %s\n", e)
-        return False
+        try:
+            json_body = json.loads(e.body)
+        except ValueError:
+            json_body = None
+
+        if (
+            e.status == 429
+            and json_body
+            and "email"
+            in json_body.get("error", {"message": ""}).get("message", "").lower()
+        ):
+            print(
+                "WARNING: E-mail verification was attempted too many times and is now returning 429. If clicking the link doesn't work, try again later."
+            )
+            # E-mail verification prompt
+            auth_api.verify_login_place(
+                token=input(
+                    "Open your e-mail and click on the verification link, or copy the token= field from the URL: "
+                ).strip(),
+                user_id=config["vrchat"]["userid"],
+            )
+            current_user = auth_api.get_current_user()
+        else:
+            print("Exception when calling API: %s\n", e, e.reason)
+            return False
 
     print("Logged in as:", current_user.display_name)
 
