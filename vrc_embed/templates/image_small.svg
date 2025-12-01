@@ -28,7 +28,7 @@
 
     <image id="pic-img" x="0" y="0" width="{{ opts.width }}" height="80" href="{{ image_common.pic_url(opts, user, 256) }}" mask="url(#pic-mask)" preserveAspectRatio="xMidYMid slice"/>
 
-    {%- if opts.pfp and (opts.icon_url or user.user_icon_thumbnail) -%}
+    {%- if opts.show_icon and (opts.icon_url or user.user_icon_thumbnail) -%}
     {%- if user.state == "online" -%}
         {% set icon_bg_color = "rgb(81, 229, 126)" %}
     {%- else -%}

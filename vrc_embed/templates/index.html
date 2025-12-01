@@ -16,6 +16,7 @@
         body { background: #0E1013; color: #E6E7E8; font-family: 'Noto Sans', sans-serif; line-height: 1.75; text-align: justify; margin: 0; }
         h1 { text-shadow: 0 2px 2px #1E2A31; text-align: center; }
         h2 { margin: 0; font-size: 1.15em; }
+        h3 { margin: 0; }
         .subtitle { font-size: 0.875em; opacity: 0.7; margin: 0; margin-top: -6px; text-align: left; line-height: 1.5em; }
         .padding { max-width: 600px; margin: 0 auto; padding: 20px; padding-bottom: 0; }
         .configurator { background-color: rgba(0, 0, 0, 0.25); display: flex; flex-wrap: wrap;  justify-content: center; position: relative; gap: 20px; padding: 20px; }
@@ -259,8 +260,8 @@
                 <h3>Display options</h3>
 
                 <div class="input-wrapper">
-                    <label for="pfp">Show profile picture</label>
-                    <input type="checkbox" id="pfp" name="pfp" checked/>
+                    <label for="show_icon">Show user icon</label>
+                    <input type="checkbox" id="show_icon" name="show_icon" checked/>
                 </div>
 
                 <div class="input-wrapper">
@@ -361,7 +362,7 @@
     <p style="text-align: center; opacity: 0.75; filter: grayscale(1); padding: 0 20px;"><small>This service is not affiliated with VRChat or VRChat Inc.; VRChat is a registered trademark of VRChat Inc.<br><a href="https://github.com/knuxify/vrc-embed">Source code</a></small></p>
 
     <script>
-        const props = ["uid", "embed_type", "width", "pfp", "lastseen", "pronouns", "logo", "logo_position", "ingame_only"{% if allow_custom_url%}, "pic_url", "icon_url"{% endif %}, "foreground_color", "background_color"];
+        const props = ["uid", "embed_type", "width", "show_icon", "lastseen", "pronouns", "logo", "logo_position", "ingame_only"{% if allow_custom_url%}, "pic_url", "icon_url"{% endif %}, "foreground_color", "background_color"];
         const defaults = JSON.parse('{{ opt_defaults | tojson }}');
         var widths = {"large": 350, "small": 250, "tiny": 250};
         var last_opts = null;

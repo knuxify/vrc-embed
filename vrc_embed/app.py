@@ -69,21 +69,21 @@ EMBED_OPTS = {
         },
         "width": { "type": ("int", {"min": 1, "max": 2000}), "default": "355" },
 
-        "pfp": {"type": ("bool",), "default": "true"},
+        "show_icon": {"type": ("bool",), "default": "true"},
         "lastseen": {"type": ("bool",), "default": "true"},
         "pronouns": {"type": ("bool",), "default": "true"},
     }),
     "small": OptionsManager(COMMON_OPTS | {
         "width": { "type": ("int", {"min": 1, "max": 2000}), "default": "250" },
 
-        "pfp": {"type": ("bool",), "default": "true"},
+        "show_icon": {"type": ("bool",), "default": "true"},
         "lastseen": {"type": ("bool",), "default": "true"},
         "pronouns": {"type": ("bool",), "default": "true"},
     }),
     "tiny": OptionsManager(COMMON_OPTS | {
         "width": { "type": ("int", {"min": 1, "max": 2000}), "default": "250" },
 
-        "pfp": {"type": ("bool",), "default": "true"},
+        "show_icon": {"type": ("bool",), "default": "true"},
         "lastseen": {"type": ("bool",), "default": "false"},
         "pronouns": {"type": ("bool",), "default": "true"},
     }),
@@ -136,12 +136,15 @@ async def get_user_embed(user_id: str, embed_type: str):
             }
 
         if opts["lastseen"]:
-            last_seen_str = timeago.format(
-                datetime.datetime.fromisoformat(user["last_activity"]).replace(
-                    tzinfo=datetime.timezone.utc
-                ),
-                datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc),
-            )
+            if user.get("last_activity", ""):
+                last_seen_str = timeago.format(
+                    datetime.datetime.fromisoformat(user["last_activity"]).replace(
+                        tzinfo=datetime.timezone.utc
+                    ),
+                    datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc),
+                )
+            else:
+                last_seen_str = "N/A"
         else:
             last_seen_str = None
 

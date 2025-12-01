@@ -26,7 +26,7 @@
 
     <rect id="background" x="0" y="0" width="{{ opts.width }}" height="70" rx="8" ry="8" fill="{{ opts.background_color or '#181B1F' }}"/>
 
-    {%- if opts.pfp and (opts.icon_url or user.user_icon_thumbnail) -%}
+    {%- if opts.show_icon and (opts.icon_url or user.user_icon_thumbnail) -%}
     {% set offset_from_pfp = 56 %}
     {%- if user.state == "online" -%}
         {% set icon_bg_color = "rgb(81, 229, 126)" %}
