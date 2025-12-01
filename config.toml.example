@@ -25,6 +25,8 @@ username="YourVRCAccountHere"
 password="correct horse battery staple"
 # ID of the bot user, with usr_ prefix
 userid="usr_abcd..."
+# Display name of the bot, if different from the username
+# displayname="FriendlyBot"
 
 # VRChat requires either e-mail or 2FA verification on nearly every login.
 # Typing the codes in manually is possible, but highly impractical for headless
