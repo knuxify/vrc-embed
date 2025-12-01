@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Fetching data from VRChat and caching."""
 
+import asyncio
 import json
 import pickle
 from http.cookiejar import Cookie
@@ -8,7 +9,7 @@ from typing import Tuple, Union
 
 import pyotp
 import vrchatapi
-from vrchatapi.api import authentication_api, friends_api, notifications_api, users_api
+from vrchatapi.api import authentication_api, notifications_api, users_api
 from vrchatapi.exceptions import UnauthorizedException
 from vrchatapi.models.notification_type import NotificationType
 from vrchatapi.models.two_factor_auth_code import TwoFactorAuthCode
@@ -54,16 +55,22 @@ def api_make_cookie(name: str, value: str) -> Cookie:
     )
 
 
-def api_log_in() -> bool:
+def api_log_in(force_no_cookies: bool = False) -> bool:
     """
     Log into the VRChat API using the credentials.
 
+    :param force_no_cookies: If True, ignores the existing login cookies.
     :returns: True if logging in succeeded, False otherwise.
     """
     auth_api = authentication_api.AuthenticationApi(vrc_api)
 
-    auth_cookie_cached = cache.get_bin("vrcembed:cookies:auth")
-    twofactorauth_cookie_cached = cache.get_bin("vrcembed:cookies:twofactorauth")
+    if force_no_cookies:
+        auth_cookie_cached = None
+        twofactorauth_cookie_cached = None
+    else:
+        auth_cookie_cached = cache.get_bin("vrcembed:cookies:auth")
+        twofactorauth_cookie_cached = cache.get_bin("vrcembed:cookies:twofactorauth")
+
     if auth_cookie_cached:
         try:
             auth_cookie = pickle.loads(auth_cookie_cached)
@@ -212,18 +219,19 @@ def get_vrc_user(user_id: str) -> Tuple[Union[dict, None], bool]:
 def accept_friend_requests():
     """Go through all friend requests and accept them."""
     notif_api = notifications_api.NotificationsApi(vrc_api)
-    friend_api = friends_api.FriendsApi(vrc_api)
 
     notifs = notif_api.get_notifications(type=NotificationType.FRIENDREQUEST)
     for notif in notifs:
+        if notif.type != "friendRequest":
+            continue
         try:
             # Accept the friend request using the sender's user ID
-            friend_api.friend(user_id=notif.sender_user_id)
-            notif_api.delete_notification(notif.id)
+            notif_api.accept_friend_request(notification_id=notif.id)
+            notif_api.delete_notification(notification_id=notif.id)
         except Exception as e:
             print(f"Error accepting friend request from {notif}: {e}")
 
 
 async def accept_friend_requests_async():
     """Async wrapper around accept_friend_requests for Quart-Tasks."""
-    accept_friend_requests()
+    await asyncio.to_thread(accept_friend_requests)
