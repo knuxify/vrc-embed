@@ -10,7 +10,7 @@ from typing import Tuple, Union
 import pyotp
 import vrchatapi
 from vrchatapi.api import authentication_api, notifications_api, users_api
-from vrchatapi.exceptions import UnauthorizedException
+from vrchatapi.exceptions import NotFoundException, UnauthorizedException
 from vrchatapi.models.notification_type import NotificationType
 from vrchatapi.models.two_factor_auth_code import TwoFactorAuthCode
 from vrchatapi.models.two_factor_email_code import TwoFactorEmailCode
@@ -228,6 +228,8 @@ def accept_friend_requests():
             # Accept the friend request using the sender's user ID
             notif_api.accept_friend_request(notification_id=notif.id)
             notif_api.delete_notification(notification_id=notif.id)
+        except NotFoundException:
+            pass
         except Exception as e:
             print(f"Error accepting friend request from {notif}: {e}")
 
