@@ -30,7 +30,7 @@ from .vrchat import (
 app = Quart(__name__)
 app.jinja_env.globals.update(
     text_width=text_width,
-    bot_id=config["bot"]["id"],
+    bot_id=config["bot"]["userid"],
     bot_username=config["bot"]["username"],
 )
 api_log_in()
