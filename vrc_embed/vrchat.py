@@ -8,8 +8,9 @@ from typing import Tuple, Union
 
 import pyotp
 import vrchatapi
-from vrchatapi.api import authentication_api, users_api
+from vrchatapi.api import authentication_api, friends_api, notifications_api, users_api
 from vrchatapi.exceptions import UnauthorizedException
+from vrchatapi.models.notification_type import NotificationType
 from vrchatapi.models.two_factor_auth_code import TwoFactorAuthCode
 from vrchatapi.models.two_factor_email_code import TwoFactorEmailCode
 
@@ -206,3 +207,23 @@ def get_vrc_user(user_id: str) -> Tuple[Union[dict, None], bool]:
             cache.set_json(cache_key, user, timeout=CACHE_TIMEOUT)
 
     return (user, user_cached)
+
+
+def accept_friend_requests():
+    """Go through all friend requests and accept them."""
+    notif_api = notifications_api.NotificationsApi(vrc_api)
+    friend_api = friends_api.FriendsApi(vrc_api)
+
+    notifs = notif_api.get_notifications(type=NotificationType.FRIENDREQUEST)
+    for notif in notifs:
+        try:
+            # Accept the friend request using the sender's user ID
+            friend_api.friend(user_id=notif.sender_user_id)
+            notif_api.delete_notification(notif.id)
+        except Exception as e:
+            print(f"Error accepting friend request from {notif}: {e}")
+
+
+async def accept_friend_requests_async():
+    """Async wrapper around accept_friend_requests for Quart-Tasks."""
+    accept_friend_requests()

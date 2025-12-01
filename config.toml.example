@@ -23,6 +23,8 @@ contact="you@example.com"
 username="YourVRCAccountHere"
 # Password for VRChat account
 password="correct horse battery staple"
+# ID of the bot user, with usr_ prefix
+id="usr_abcd..."
 
 # VRChat requires either e-mail or 2FA verification on nearly every login.
 # Typing the codes in manually is possible, but highly impractical for headless

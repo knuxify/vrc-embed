@@ -20,14 +20,24 @@ from .render import (
     svg2png,
     svg_inline_images,
 )
-from .vrchat import CACHE_TIMEOUT, api_log_in, get_vrc_user
+from .vrchat import (
+    CACHE_TIMEOUT,
+    accept_friend_requests_async,
+    api_log_in,
+    get_vrc_user,
+)
 
 app = Quart(__name__)
-app.jinja_env.globals.update(text_width=text_width)
+app.jinja_env.globals.update(
+    text_width=text_width,
+    bot_id=config["bot"]["id"],
+    bot_username=config["bot"]["username"],
+)
 api_log_in()
 
 tasks = QuartTasks(app)
 tasks.add_cron_task(image_cache.prune_dormant, "0 */1 * * *")
+tasks.add_cron_task(accept_friend_requests_async, "1 1/1 * * * *")
 
 #: Valid embed types (templates) and which filetypes they support.
 EMBEDS = {
@@ -42,8 +52,8 @@ EMBEDS = {
 #: For an explanation of the type system, see OptionsManager in opts.py.
 COMMON_OPTS = {
     "inline_img": {"type": ("bool",), "default": "false"},
-    "pfp_url": {"type": ("url",), "default": ""},
-    "banner_url": {"type": ("url",), "default": ""},
+    "icon_url": {"type": ("url",), "default": ""},
+    "pic_url": {"type": ("url",), "default": ""},
     "logo": {"type": ("enum", ["big", "small", "none"]), "default": "small"},
     "background_color": {"type": ("color",), "default": "181B1F"},
     "foreground_color": {"type": ("color",), "default": "F8F9FA"},
@@ -114,7 +124,7 @@ async def get_user_embed(user_id: str, embed_type: str):
             return {"error": str(e)}, 400
 
         if config["general"].get("block_custom_pfp_and_banner", False) and (
-            "pfp_url" in opts or "banner_url" in opts
+            "icon_url" in opts or "pic_url" in opts
         ):
             return {"error": "This instance does not allow custom pfp/banner URLs"}
 

@@ -235,6 +235,8 @@
                 <h2>Configurator</h2>
                 <p class="subtitle">To get your user ID, open the <a href="https://vrchat.com/home">VRChat website</a>, navigate to your profile, then copy the "usr_..." part of the URL.</p>
 
+                <p class="subtitle"><b>Important:</b> Getting the user status and "last seen" date requires you to have the vrc-embed bot account added to your friends. To do so, send a friend request to <a href="https://vrchat.com/home/user/{{bot_id}}">{{bot_username}}</a> - it should be accepted in around a minute.</p>
+
                 <div class="input-wrapper">
                     <label for="uid">User ID</label>
                     <input id="uid" placeholder=""/>
@@ -254,16 +256,11 @@
                     <input id="width" inputmode="numeric" type="number" min="1" max="2000" placeholder="" value="350"/>
                 </div>
 
-                <hr>
+                <h3>Display options</h3>
 
                 <div class="input-wrapper">
                     <label for="pfp">Show profile picture</label>
                     <input type="checkbox" id="pfp" name="pfp" checked/>
-                </div>
-
-                <div class="input-wrapper">
-                    <label for="lastseen">Show "last seen" label</label>
-                    <input type="checkbox" id="lastseen" name="lastseen" checked/>
                 </div>
 
                 <div class="input-wrapper">
@@ -272,11 +269,16 @@
                 </div>
 
                 <div class="input-wrapper">
+                    <label for="lastseen">Show "last seen" label <small>(must have bot in friends)</small></label>
+                    <input type="checkbox" id="lastseen" name="lastseen" checked/>
+                </div>
+
+                <div class="input-wrapper">
                     <label for="ingame_only">Only display in-game status <small>(not "Active on website")</small></label>
                     <input type="checkbox" id="ingame_only" name="ingame_only"/>
                 </div>
 
-                <hr>
+                <h3>VRChat logo options</h3>
 
                 <div class="input-wrapper">
                     <label for="logo">Logo type</label>
@@ -296,7 +298,7 @@
                     </select>
                 </div>
 
-                <hr>
+                <h3>Colors</h3>
 
                 <div class="input-wrapper">
                     <label for="foreground_color">Foreground color</label>
@@ -308,16 +310,16 @@
                     <input id="background_color" type="color" value="#181B1F"/>
                 </div>
                 {% if allow_custom_url %}
-                <hr>
+                <h3>Custom images</h3>
 
                 <div class="input-wrapper">
-                    <label for="pfp_url">Custom profile picture URL</label>
-                    <input id="pfp_url" inputmode="url" placeholder=""/>
+                    <label for="pic_url">Custom profile picture URL</label>
+                    <input id="pic_url" inputmode="url" placeholder=""/>
                 </div>
 
                 <div class="input-wrapper">
-                    <label for="banner_url">Custom banner URL</label>
-                    <input id="banner_url" inputmode="url" placeholder=""/>
+                    <label for="icon_url">Custom user icon URL</label>
+                    <input id="icon_url" inputmode="url" placeholder=""/>
                 </div>
                 {% endif %}
 
@@ -359,7 +361,7 @@
     <p style="text-align: center; opacity: 0.75; filter: grayscale(1); padding: 0 20px;"><small>This service is not affiliated with VRChat or VRChat Inc.; VRChat is a registered trademark of VRChat Inc.<br><a href="https://github.com/knuxify/vrc-embed">Source code</a></small></p>
 
     <script>
-        const props = ["uid", "embed_type", "width", "pfp", "lastseen", "pronouns", "logo", "logo_position", "ingame_only"{% if allow_custom_url%}, "pfp_url", "banner_url"{% endif %}, "foreground_color", "background_color"];
+        const props = ["uid", "embed_type", "width", "pfp", "lastseen", "pronouns", "logo", "logo_position", "ingame_only"{% if allow_custom_url%}, "pic_url", "icon_url"{% endif %}, "foreground_color", "background_color"];
         const defaults = JSON.parse('{{ opt_defaults | tojson }}');
         var widths = {"large": 350, "small": 250, "tiny": 250};
         var last_opts = null;

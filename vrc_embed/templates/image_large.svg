@@ -13,17 +13,17 @@
                #status { font-size: 19.2px; font-weight: bold; }
           </style>
 
-          <mask id="banner-mask">
+          <mask id="pic-mask">
                <rect x="0" y="0" width="{{ opts.width }}" height="8" fill="black"/>
                <rect rx="8" ry="8" width="{{ opts.width }}" height="215" fill="white"/>
                <rect x="0" y="207" width="{{ opts.width }}" height="8" fill="white"/>
           </mask>
 
-          <mask id="pfp-mask">
+          <mask id="icon-mask">
                <circle cx="57" cy="158" r="43" fill="white"/>
           </mask>
 
-          <filter id="pfp-shadow">
+          <filter id="icon-shadow">
                <feDropShadow dx="0" dy="4" stdDeviation="2" flood-color="rgba(10, 10, 13, 0.55)" />
           </filter>
 
@@ -35,16 +35,16 @@
 
      <rect id="background" x="0" y="0" width="{{ opts.width }}" height="{{ img_height }}" rx="8" ry="8" fill="{{ opts.background_color or '#181B1F' }}"/>
 
-     <image id="banner-img" x="0" y="0" width="{{ opts.width }}" height="215" href="{{ image_common.banner_url(opts, user, 512) }}" mask="url(#banner-mask)" preserveAspectRatio="xMidYMid slice"/>
+     <image id="pic-img" x="0" y="0" width="{{ opts.width }}" height="215" href="{{ image_common.pic_url(opts, user, 512) }}" mask="url(#pic-mask)" preserveAspectRatio="xMidYMid slice"/>
 
-     {%- if opts.pfp and (opts.pfp_url or user.user_icon_thumbnail) -%}
+     {%- if opts.pfp and (opts.icon_url or user.user_icon_thumbnail) -%}
      {%- if user.state == "online" -%}
-          {% set pfp_bg_color = "rgb(81, 229, 126)" %}
+          {% set icon_bg_color = "rgb(81, 229, 126)" %}
      {%- else -%}
-          {% set pfp_bg_color = "rgb(128, 128, 128)" %}
+          {% set icon_bg_color = "rgb(128, 128, 128)" %}
      {%- endif -%}
-     <circle id="pfp-bg" cx="57" cy="158" r="45" fill="{{ pfp_bg_color }}" filter="url(#pfp-shadow)"/>
-     <image id="pfp-img" x="14" y="115" width="86" height="86" href="{{ opts.pfp_url or image_common.vrc_image_size(user.user_icon_thumbnail, 128) }}" mask="url(#pfp-mask)"/>
+     <circle id="icon-bg" cx="57" cy="158" r="45" fill="{{ icon_bg_color }}" filter="url(#icon-shadow)"/>
+     <image id="icon-img" x="14" y="115" width="86" height="86" href="{{ opts.icon_url or image_common.vrc_image_size(user.user_icon_thumbnail, 128) }}" mask="url(#icon-mask)"/>
      {%- endif -%}
 
      {% if opts.lastseen %}
