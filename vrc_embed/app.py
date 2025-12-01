@@ -37,7 +37,7 @@ api_log_in()
 
 tasks = QuartTasks(app)
 tasks.add_cron_task(image_cache.prune_dormant, "0 */1 * * *")
-tasks.add_cron_task(accept_friend_requests_async, "*/1 * * * *")
+tasks.add_cron_task(accept_friend_requests_async, "* * * * *")
 
 #: Valid embed types (templates) and which filetypes they support.
 EMBEDS = {
